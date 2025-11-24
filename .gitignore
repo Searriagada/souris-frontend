@@ -1,1 +1,21 @@
+# Variables de entorno
 .env
+.env.local
+.env.production
+.env.staging
+
+# Dependencias y build
+node_modules/
+dist/
+build/
+.vite/
+
+# Archivos de desarrollo
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
