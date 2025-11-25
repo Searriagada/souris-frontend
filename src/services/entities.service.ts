@@ -21,10 +21,19 @@ import {
   Venta,
   CreateVentaDto,
   UpdateVentaDto,
+  UpdateStockInsumoDto,
+  UpdateCategoriaDto,
+  Categoria,
+  CreateCategoriaDto,
 } from '../types';
 
 // Insumos
 export const insumoService = createCrudService<Insumo, CreateInsumoDto, UpdateInsumoDto>('/insumos');
+// Categorías
+export const categoriaService = createCrudService<Categoria, CreateCategoriaDto, UpdateCategoriaDto>('/categoria');
+
+// StockInsumos
+export const stockInsumoService = createCrudService<Insumo, CreateInsumoDto, UpdateStockInsumoDto>('/stock-insumos');
 
 // Productos
 export const productoService = createCrudService<Producto, CreateProductoDto, UpdateProductoDto>('/productos');

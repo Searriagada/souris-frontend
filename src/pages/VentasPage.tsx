@@ -13,8 +13,8 @@ import {
   ConfirmDialog,
   Button,
   Input,
-  Select,
 } from '../components/ui';
+import { CustomSelect } from '@/components/ui/Select';
 
 export function VentasPage() {
   const queryClient = useQueryClient();
@@ -304,17 +304,17 @@ export function VentasPage() {
             name="id_cliente"
             control={control}
             render={({ field }) => (
-              <Select
+              <CustomSelect
                 label="Cliente"
                 placeholder="Selecciona un cliente"
-                options={clientes.map((c) => ({
-                  value: c.id_cliente,
-                  label: c.nombre_cliente,
-                }))}
+                options={clientes
+                  .map((c) => ({
+                    value: c.id_cliente,
+                    label: `${c.nombre_cliente}`,
+                  }))}
+                value={field.value || null}
+                onChange={(value) => field.onChange(Number(value))}
                 error={errors.id_cliente?.message}
-                {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                value={field.value || ''}
               />
             )}
           />
@@ -323,7 +323,7 @@ export function VentasPage() {
             name="id_plataforma"
             control={control}
             render={({ field }) => (
-              <Select
+              <CustomSelect
                 label="Plataforma"
                 placeholder="Selecciona una plataforma"
                 options={plataformas
@@ -332,10 +332,9 @@ export function VentasPage() {
                     value: p.id_plataforma,
                     label: `${p.nombre_plataforma} (${p.comision}%)`,
                   }))}
+                value={field.value || null}
+                onChange={(value) => field.onChange(Number(value))}
                 error={errors.id_plataforma?.message}
-                {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                value={field.value || ''}
               />
             )}
           />

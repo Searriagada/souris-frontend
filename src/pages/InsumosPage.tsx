@@ -1,44 +1,56 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Pencil, Trash2, ExternalLink, Power } from 'lucide-react';
 import { toast } from 'sonner';
-import { insumoService } from '../services/entities.service';
-import { insumoSchema, InsumoFormData } from '../schemas';
+import { categoriaService, insumoService, stockInsumoService } from '../services/entities.service';
+import { insumoSchema, InsumoFormData, stockSchema, StockFormData } from '../schemas';
 import { Insumo } from '../types';
 import {
   DataTable,
   Modal,
-  ConfirmDialog,
   StatusBadge,
   Button,
   Input,
+  CustomSelect
 } from '../components/ui';
 
 export function InsumosPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
-  // Fetch insumos
   const { data: insumos = [], isLoading, error } = useQuery({
     queryKey: ['insumos'],
     queryFn: insumoService.getAll,
   });
 
-  // Form
+  const { data: categorias = [] } = useQuery({
+    queryKey: ['categorias'],
+    queryFn: categoriaService.getAll,
+  });
+
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<InsumoFormData>({
     resolver: zodResolver(insumoSchema),
   });
 
-  // Mutations
+  const {
+    register: registerStock,
+    handleSubmit: handleSubmitStock,
+    reset: resetStock,
+    formState: { errors: stockErrors, isSubmitting: isStockSubmitting },
+  } = useForm<StockFormData>({
+    resolver: zodResolver(stockSchema),
+  });
+
   const createMutation = useMutation({
     mutationFn: insumoService.create,
     onSuccess: () => {
@@ -64,19 +76,6 @@ export function InsumosPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: insumoService.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['insumos'] });
-      toast.success('Insumo eliminado exitosamente');
-      setIsDeleteDialogOpen(false);
-      setSelectedInsumo(null);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
   const toggleStatusMutation = useMutation({
     mutationFn: (insumo: Insumo) =>
       insumoService.update(insumo.id_insumo, {
@@ -91,12 +90,24 @@ export function InsumosPage() {
     },
   });
 
-  // Handlers
+  const updateStockMutation = useMutation({
+    mutationFn: ({ id, cantidad }: { id: number; cantidad: number }) =>
+      stockInsumoService.update(id, { cantidad }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['insumos'] });
+      toast.success('Stock actualizado exitosamente');
+      handleCloseStockModal();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleOpenCreate = () => {
     setSelectedInsumo(null);
     reset({
       nombre_insumo: '',
-      categoria_insumo: '',
+      id_categoria: undefined,
       precio_insumo: undefined,
       link_insumo: '',
     });
@@ -107,16 +118,11 @@ export function InsumosPage() {
     setSelectedInsumo(insumo);
     reset({
       nombre_insumo: insumo.nombre_insumo,
-      categoria_insumo: insumo.categoria_insumo || '',
+      id_categoria: insumo.id_categoria ?? undefined,
       precio_insumo: insumo.precio_insumo,
       link_insumo: insumo.link_insumo || '',
     });
     setIsModalOpen(true);
-  };
-
-  const handleOpenDelete = (insumo: Insumo) => {
-    setSelectedInsumo(insumo);
-    setIsDeleteDialogOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -125,23 +131,38 @@ export function InsumosPage() {
     reset();
   };
 
-  const onSubmit = (data: InsumoFormData) => {
-    // Clean empty strings
-    const cleanedData = {
-      nombre_insumo: data.nombre_insumo,
-      categoria_insumo: data.categoria_insumo || undefined,
-      precio_insumo: data.precio_insumo || undefined,
-      link_insumo: data.link_insumo || undefined,
-    };
+  const handleOpenStockModal = (insumo: Insumo) => {
+    setSelectedInsumo(insumo);
+    resetStock({ cantidad: insumo.cantidad || 0 });
+    setIsStockModalOpen(true);
+  };
 
+  const handleCloseStockModal = () => {
+    setIsStockModalOpen(false);
+    setSelectedInsumo(null);
+    resetStock();
+  };
+
+  const onStockSubmit = (data: StockFormData) => {
     if (selectedInsumo) {
-      updateMutation.mutate({ id: selectedInsumo.id_insumo, data: cleanedData });
-    } else {
-      createMutation.mutate(cleanedData);
+      updateStockMutation.mutate({ id: selectedInsumo.id_insumo, cantidad: data.cantidad });
     }
   };
 
-  // Table columns
+  const onSubmit = (data: InsumoFormData) => {
+    const cleanData = {
+      ...data,
+      id_categoria: data.id_categoria === null ? undefined : data.id_categoria,
+      link_insumo: data.link_insumo === '' ? undefined : data.link_insumo,
+    } as InsumoFormData;
+
+    if (selectedInsumo) {
+      updateMutation.mutate({ id: selectedInsumo.id_insumo, data: cleanData });
+    } else {
+      createMutation.mutate(cleanData);
+    }
+  };
+
   const columns = [
     {
       key: 'nombre_insumo',
@@ -150,19 +171,49 @@ export function InsumosPage() {
       render: (item: Insumo) => (
         <div>
           <p className="font-medium text-white">{item.nombre_insumo}</p>
-          {item.categoria_insumo && (
-            <p className="text-xs text-zinc-500">{item.categoria_insumo}</p>
+          {item.nombre_categoria && (
+            <p className="text-xs text-zinc-500">{item.nombre_categoria}</p>
           )}
         </div>
       ),
     },
     {
+      key: 'nombre_categoria',
+      label: 'Categoría',
+      sortable: true,
+      render: (item: Insumo) => (
+        <p className="font-medium text-white">{item.nombre_categoria || '—'}</p>
+      ),
+    },
+    {
+      key: 'cantidad',
+      label: 'Stock',
+      sortable: true,
+      render: (item: Insumo) => (
+        <button
+          onClick={() => handleOpenStockModal(item)}
+          className="font-medium text-amber-500 hover:text-amber-400 hover:underline transition-colors"
+        >
+          {item.cantidad || 0}
+        </button>
+      ),
+    },
+    {
       key: 'precio_insumo',
       label: 'Precio',
-      sortable: true,
+      sortable: false,
       render: (item: Insumo) =>
         item.precio_insumo
-          ? `$${item.precio_insumo.toLocaleString('es-CL')}`
+          ? `$${Math.round(item.precio_insumo).toLocaleString('es-CL')}`
+          : '—',
+    },
+    {
+      key: 'total_value',
+      label: 'Total',
+      sortable: false,
+      render: (item: Insumo) =>
+        item.precio_insumo
+          ? `$${(item.precio_insumo * (item.cantidad || 0)).toLocaleString('es-CL')}`
           : '—',
     },
     {
@@ -205,19 +256,11 @@ export function InsumosPage() {
       >
         <Pencil className="w-4 h-4" />
       </button>
-      <button
-        onClick={() => handleOpenDelete(item)}
-        className="p-2 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-lg transition-colors"
-        title="Eliminar"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
     </div>
   );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif text-white">Insumos</h1>
@@ -228,7 +271,6 @@ export function InsumosPage() {
         </Button>
       </div>
 
-      {/* Table */}
       <DataTable
         data={insumos}
         columns={columns}
@@ -240,7 +282,6 @@ export function InsumosPage() {
         actions={tableActions}
       />
 
-      {/* Create/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -254,11 +295,22 @@ export function InsumosPage() {
             {...register('nombre_insumo')}
           />
 
-          <Input
-            label="Categoría"
-            placeholder="Ej: Materiales"
-            error={errors.categoria_insumo?.message}
-            {...register('categoria_insumo')}
+          <Controller
+            name="id_categoria"
+            control={control}
+            render={({ field }) => (
+              <CustomSelect
+                label="Categoría"
+                placeholder="Selecciona una categoría"
+                options={categorias.map((cat) => ({
+                  value: cat.id_categoria,
+                  label: cat.nombre_categoria,
+                }))}
+                value={field.value}
+                onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                error={errors.id_categoria?.message}
+              />
+            )}
           />
 
           <Input
@@ -272,7 +324,7 @@ export function InsumosPage() {
 
           <Input
             label="Link de compra"
-            type="url"
+            type="text"
             placeholder="https://..."
             error={errors.link_insumo?.message}
             {...register('link_insumo')}
@@ -298,16 +350,40 @@ export function InsumosPage() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={() => selectedInsumo && deleteMutation.mutate(selectedInsumo.id_insumo)}
-        title="Eliminar Insumo"
-        message={`¿Estás seguro de eliminar "${selectedInsumo?.nombre_insumo}"? Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
-        isLoading={deleteMutation.isPending}
-      />
+      <Modal
+        isOpen={isStockModalOpen}
+        onClose={handleCloseStockModal}
+        title={`Actualizar Stock - ${selectedInsumo?.nombre_insumo}`}
+      >
+        <form onSubmit={handleSubmitStock(onStockSubmit)} className="space-y-4">
+          <Input
+            label="Cantidad en stock"
+            type="number"
+            step="1"
+            placeholder="0"
+            error={stockErrors.cantidad?.message}
+            {...registerStock('cantidad', { valueAsNumber: true })}
+          />
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseStockModal}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              isLoading={isStockSubmitting || updateStockMutation.isPending}
+              className="flex-1"
+            >
+              Actualizar Stock
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

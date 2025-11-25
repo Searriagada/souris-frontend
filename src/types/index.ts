@@ -28,28 +28,35 @@ export interface AuthResponse {
 export interface Insumo {
   id_insumo: number;
   nombre_insumo: string;
-  categoria_insumo?: string;
+  id_categoria?: number;
+  nombre_categoria?: string;
   precio_insumo?: number;
   link_insumo?: string;
   status: 'activo' | 'inactivo';
   usuario?: string;
   created_at: string;
   updated_at: string;
+  cantidad?: number;
 }
 
 export interface CreateInsumoDto {
   nombre_insumo: string;
-  categoria_insumo?: string;
+  id_categoria?: number;
   precio_insumo?: number;
   link_insumo?: string;
 }
 
 export interface UpdateInsumoDto {
   nombre_insumo?: string;
-  categoria_insumo?: string;
+  id_categoria?: number;
   precio_insumo?: number;
   link_insumo?: string;
   status?: 'activo' | 'inactivo';
+  cantidad?: number;
+}
+
+export interface UpdateStockInsumoDto {
+  cantidad: number;
 }
 
 // Stock Insumo
@@ -252,6 +259,20 @@ export interface CostoProducto {
   caja?: Caja;
   cadena?: Cadena;
   plataforma?: PlataformaVenta;
+}
+
+// Categoría Insumo
+export interface Categoria {
+  id_categoria: number;
+  nombre_categoria: string;
+}
+
+export interface CreateCategoriaDto {
+  nombre_categoria: string;
+}
+
+export interface UpdateCategoriaDto {
+  nombre_categoria?: string;
 }
 
 // API Response

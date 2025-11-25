@@ -39,24 +39,24 @@ export const registerSchema = z
 // Insumo schemas
 export const insumoSchema = z.object({
   nombre_insumo: z
-    .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(100, 'El nombre no puede tener más de 100 caracteres'),
-  categoria_insumo: z
-    .string()
-    .max(30, 'La categoría no puede tener más de 30 caracteres')
-    .optional()
-    .transform((val) => val || undefined),
+    .string({ required_error: 'El nombre del insumo es requerido' })
+    .min(1, 'El nombre es requerido')
+    .min(3, 'El nombre debe tener al menos 3 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  id_categoria: z
+    .number()
+    .int('Debe ser un número entero')
+    .positive('Debe ser un número positivo')
+    .optional(),
   precio_insumo: z
-    .union([z.number(), z.nan(), z.undefined()])
-    .transform((val) => (Number.isNaN(val) ? undefined : val))
+    .number()
+    .positive('El precio debe ser mayor a 0')
     .optional(),
   link_insumo: z
     .string()
-    .max(300, 'El link no puede tener más de 300 caracteres')
-    .optional()
-    .transform((val) => val || undefined),
+    .optional(),
 });
+
 
 // Producto schemas
 export const productoSchema = z.object({
@@ -134,6 +134,11 @@ export const ventaSchema = z.object({
   fecha_venta: z.string().min(1, 'La fecha es requerida'),
 });
 
+// Stock schema
+export const stockSchema = z.object({
+  cantidad: z.number().min(0, 'La cantidad debe ser mayor o igual a 0'),
+});
+
 // Export types
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
@@ -144,3 +149,5 @@ export type CadenaFormData = z.infer<typeof cadenaSchema>;
 export type PlataformaFormData = z.infer<typeof plataformaSchema>;
 export type ClienteFormData = z.infer<typeof clienteSchema>;
 export type VentaFormData = z.infer<typeof ventaSchema>;
+export type StockFormData = z.infer<typeof stockSchema>;
+
