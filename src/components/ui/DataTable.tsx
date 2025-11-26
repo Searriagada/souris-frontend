@@ -2,7 +2,6 @@ import { useState, ReactNode } from 'react';
 import {
   ChevronUp,
   ChevronDown,
-  Search,
   Loader2,
   AlertCircle,
 } from 'lucide-react';
@@ -33,7 +32,6 @@ export function DataTable<T>({
   keyField,
   isLoading = false,
   error = null,
-  onSearch,
   emptyMessage = 'No hay datos disponibles',
   actions,
 }: DataTableProps<T>) {
@@ -47,10 +45,6 @@ export function DataTable<T>({
       setSortKey(key);
       setSortOrder('asc');
     }
-  };
-
-  const handleSearch = (value: string) => {
-    onSearch?.(value);
   };
 
   // Filter and sort data

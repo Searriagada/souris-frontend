@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Trash2, ExternalLink, Power, Search, X } from 'lucide-react';
+import { Plus, Pencil, ExternalLink, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { categoriaService, insumoService, stockInsumoService } from '../services/entities.service';
 import { insumoSchema, InsumoFormData, stockSchema, StockFormData } from '../schemas';
@@ -10,7 +10,6 @@ import { Insumo } from '../types';
 import {
   DataTable,
   Modal,
-  StatusBadge,
   Button,
   Input,
   CustomSelect
@@ -77,16 +76,6 @@ export function InsumosPage() {
       toast.success('Insumo actualizado exitosamente');
       handleCloseModal();
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: (insumo: Insumo) =>
-      insumoService.update(insumo.id_insumo, {
-        status: insumo.status === 'activo' ? 'inactivo' : 'activo',
-      }),
     onError: (error: Error) => {
       toast.error(error.message);
     },
