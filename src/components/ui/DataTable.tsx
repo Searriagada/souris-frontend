@@ -33,12 +33,10 @@ export function DataTable<T>({
   keyField,
   isLoading = false,
   error = null,
-  searchPlaceholder = 'Buscar...',
   onSearch,
   emptyMessage = 'No hay datos disponibles',
   actions,
 }: DataTableProps<T>) {
-  const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -52,21 +50,11 @@ export function DataTable<T>({
   };
 
   const handleSearch = (value: string) => {
-    setSearchQuery(value);
     onSearch?.(value);
   };
 
   // Filter and sort data
   let processedData = [...data];
-
-  // Local search if no onSearch provided
-  if (!onSearch && searchQuery) {
-    processedData = processedData.filter((item) =>
-      Object.values(item as object).some((value) =>
-        String(value).toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    );
-  }
 
   // Sort
   if (sortKey) {
@@ -83,24 +71,6 @@ export function DataTable<T>({
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder={searchPlaceholder}
-          className="
-            w-full pl-12 pr-4 py-3 
-            bg-zinc-900 border border-zinc-800 rounded-lg
-            text-white placeholder-zinc-500
-            focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500
-            transition-all
-          "
-        />
-      </div>
-
       {/* Table */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">

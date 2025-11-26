@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Trash2, ExternalLink, Power } from 'lucide-react';
+import { Plus, Pencil, Trash2, ExternalLink, Power, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { categoriaService, insumoService, stockInsumoService } from '../services/entities.service';
 import { insumoSchema, InsumoFormData, stockSchema, StockFormData } from '../schemas';
@@ -22,10 +22,16 @@ export function InsumosPage() {
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
-  const { data: insumos = [], isLoading, error } = useQuery({
-    queryKey: ['insumos'],
-    queryFn: insumoService.getAll,
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+
+  const { data: response = { items: [], total: 0, pages: 0, page: 1 }, isLoading, error } = useQuery({
+    queryKey: ['insumos', page, search, selectedCategory],
+    queryFn: () => insumoService.getAll(page, search, selectedCategory),
   });
+
+  const { items: insumos = [], pages } = response;
 
   const { data: categorias = [] } = useQuery({
     queryKey: ['categorias'],
@@ -81,10 +87,6 @@ export function InsumosPage() {
       insumoService.update(insumo.id_insumo, {
         status: insumo.status === 'activo' ? 'inactivo' : 'activo',
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['insumos'] });
-      toast.success('Estado actualizado');
-    },
     onError: (error: Error) => {
       toast.error(error.message);
     },
@@ -171,9 +173,6 @@ export function InsumosPage() {
       render: (item: Insumo) => (
         <div>
           <p className="font-medium text-white">{item.nombre_insumo}</p>
-          {item.nombre_categoria && (
-            <p className="text-xs text-zinc-500">{item.nombre_categoria}</p>
-          )}
         </div>
       ),
     },
@@ -233,22 +232,10 @@ export function InsumosPage() {
           '—'
         ),
     },
-    {
-      key: 'status',
-      label: 'Estado',
-      render: (item: Insumo) => <StatusBadge status={item.status} />,
-    },
   ];
 
   const tableActions = (item: Insumo) => (
     <div className="flex items-center justify-end gap-2">
-      <button
-        onClick={() => toggleStatusMutation.mutate(item)}
-        className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg transition-colors"
-        title={item.status === 'activo' ? 'Desactivar' : 'Activar'}
-      >
-        <Power className="w-4 h-4" />
-      </button>
       <button
         onClick={() => handleOpenEdit(item)}
         className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
@@ -264,11 +251,60 @@ export function InsumosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif text-white">Insumos</h1>
-          <p className="text-zinc-500">Gestiona los insumos de tu inventario</p>
+          <p className="text-zinc-500">Stock de insumos</p>
         </div>
         <Button onClick={handleOpenCreate} leftIcon={<Plus className="w-5 h-5" />}>
           Nuevo Insumo
         </Button>
+      </div>
+
+      <div className="flex items-end gap-4">
+        {/* Search */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Buscar insumos..."
+            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+          />
+          {search && (
+            <button
+              onClick={() => {
+                setSearch('');
+                setPage(1);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-zinc-800 rounded transition-colors"
+              title="Limpiar búsqueda"
+            >
+              <X className="w-5 h-5 text-zinc-500 hover:text-white" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter by Category */}
+        <div className="w-64">
+          <CustomSelect
+            label="Filtrar por categoría"
+            placeholder="Todas"
+            options={[
+              { value: 0, label: 'Todas las categorías' },
+              ...categorias.map((cat) => ({
+                value: cat.id_categoria,
+                label: cat.nombre_categoria,
+              })),
+            ]}
+            value={selectedCategory}
+            onChange={(value) => {
+              setSelectedCategory(value ? Number(value) : undefined);
+              setPage(1);
+            }}
+          />
+        </div>
       </div>
 
       <DataTable
@@ -277,10 +313,32 @@ export function InsumosPage() {
         keyField="id_insumo"
         isLoading={isLoading}
         error={error?.message}
-        searchPlaceholder="Buscar insumos..."
         emptyMessage="No hay insumos registrados"
         actions={tableActions}
       />
+      <div className="flex items-center justify-center gap-2">
+        <Button
+          variant="secondary"
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+        >
+          Anterior
+        </Button>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-zinc-400">
+            Página {page} de {pages}
+          </span>
+        </div>
+
+        <Button
+          variant="secondary"
+          onClick={() => setPage(Math.min(pages, page + 1))}
+          disabled={page === pages}
+        >
+          Siguiente
+        </Button>
+      </div>
 
       <Modal
         isOpen={isModalOpen}
@@ -349,7 +407,7 @@ export function InsumosPage() {
           </div>
         </form>
       </Modal>
-
+      {/* Modal para actualizar Stock */}
       <Modal
         isOpen={isStockModalOpen}
         onClose={handleCloseStockModal}

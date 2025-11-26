@@ -26,9 +26,40 @@ import {
   Categoria,
   CreateCategoriaDto,
 } from '../types';
+import api from './api';
 
 // Insumos
-export const insumoService = createCrudService<Insumo, CreateInsumoDto, UpdateInsumoDto>('/insumos');
+const insumoServiceBase = createCrudService<Insumo, CreateInsumoDto, UpdateInsumoDto>('/insumos');
+
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  pages: number;
+  page: number;
+}
+
+export const insumoService = {
+  ...insumoServiceBase,
+  
+  async getAll(page: number = 1, search: string = '',categoryId?: number): Promise<PaginatedResponse<Insumo>> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', '10');
+    if (search) params.append('search', search);
+    if (categoryId) params.append('categoryId', categoryId.toString());
+    
+    const response = await api.get<{
+      success: boolean;
+      data: PaginatedResponse<Insumo>;
+    }>(`/insumos?${params}`);
+    
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.error || 'Error al obtener insumos');
+    }
+    
+    return response.data.data;
+  },
+};
 // Categorías
 export const categoriaService = createCrudService<Categoria, CreateCategoriaDto, UpdateCategoriaDto>('/categoria');
 
