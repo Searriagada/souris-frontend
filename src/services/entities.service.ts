@@ -32,6 +32,7 @@ import api from './api';
 const insumoServiceBase = createCrudService<Insumo, CreateInsumoDto, UpdateInsumoDto>('/insumos');
 
 interface PaginatedResponse<T> {
+  data: never[];
   items: T[];
   total: number;
   pages: number;
@@ -44,7 +45,7 @@ export const insumoService = {
   async getAll(page: number = 1, search: string = '',categoryId?: number): Promise<PaginatedResponse<Insumo>> {
     const params = new URLSearchParams();
     params.append('page', page.toString());
-    params.append('limit', '10');
+    params.append('limit', '20');
     if (search) params.append('search', search);
     if (categoryId) params.append('categoryId', categoryId.toString());
     

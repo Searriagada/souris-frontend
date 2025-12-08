@@ -94,10 +94,7 @@ export const cadenaSchema = z.object({
   nombre_cadena: z
     .string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(50, 'El nombre no puede tener más de 50 caracteres'),
-  precio: z
-    .number({ invalid_type_error: 'Debe ser un número' })
-    .min(0, 'El precio no puede ser negativo'),
+    .max(50, 'El nombre no puede tener más de 50 caracteres')
 });
 
 // Plataforma schemas
