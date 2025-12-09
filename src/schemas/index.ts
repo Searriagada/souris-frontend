@@ -76,6 +76,11 @@ export const productoSchema = z.object({
   precio_venta: z
     .number({ invalid_type_error: 'Debe ser un número' })
     .min(0, 'El precio no puede ser negativo'),
+  id_tipo_producto: z
+    .number()
+    .int('Debe ser un número entero')
+    .positive('Debe ser un número positivo')
+    .optional(),
 });
 
 // Caja schemas

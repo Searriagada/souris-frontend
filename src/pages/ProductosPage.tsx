@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Trash2, Power, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Power, Package, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { productoService } from '../services/entities.service';
+import { productoService, tipoProductoService } from '../services/entities.service';
 import { productoSchema, ProductoFormData } from '../schemas';
 import { Producto } from '../types';
 import {
@@ -14,6 +14,7 @@ import {
   StatusBadge,
   Button,
   Input,
+  CustomSelect,
 } from '../components/ui';
 
 export function ProductosPage() {
@@ -22,10 +23,22 @@ export function ProductosPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [selectedTipoProducto, setSelectedTipoProducto] = useState<number | undefined>();
+
   // Fetch productos
-  const { data: productos = [], isLoading, error } = useQuery({
-    queryKey: ['productos'],
-    queryFn: productoService.getAll,
+  const { data: response = { items: [], total: 0, pages: 0, page: 1 }, isLoading, error } = useQuery({
+    queryKey: ['productos', page, search, selectedTipoProducto],
+    queryFn: () => productoService.getAll(page, search, selectedTipoProducto),
+  });
+
+  const { items: productos = [], pages } = response;
+
+  // Fetch tipos de producto
+  const { data: tiposProducto = [] } = useQuery({
+    queryKey: ['tipo-producto'],
+    queryFn: tipoProductoService.getAll,
   });
 
   // Form
@@ -33,6 +46,7 @@ export function ProductosPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProductoFormData>({
     resolver: zodResolver(productoSchema),
@@ -99,6 +113,7 @@ export function ProductosPage() {
       nombre_producto: '',
       descripcion: '',
       precio_venta: 0,
+      id_tipo_producto: undefined,
     });
     setIsModalOpen(true);
   };
@@ -110,6 +125,7 @@ export function ProductosPage() {
       nombre_producto: producto.nombre_producto,
       descripcion: producto.descripcion || '',
       precio_venta: producto.precio_venta,
+      id_tipo_producto: producto.id_tipo_producto ?? undefined,
     });
     setIsModalOpen(true);
   };
@@ -131,6 +147,7 @@ export function ProductosPage() {
       nombre_producto: data.nombre_producto,
       descripcion: data.descripcion || undefined,
       precio_venta: data.precio_venta,
+      id_tipo_producto: data.id_tipo_producto || undefined,
     };
 
     if (selectedProducto) {
@@ -171,12 +188,22 @@ export function ProductosPage() {
       ),
     },
     {
+      key: 'nombre_tipo_producto',
+      label: 'Tipo',
+      sortable: true,
+      render: (item: Producto) => (
+        <p className="font-medium text-white">{item.nombre_tipo_producto || '—'}</p>
+      ),
+    },
+    {
       key: 'precio_venta',
-      label: 'Precio',
+      label: 'Precio venta',
       sortable: true,
       render: (item: Producto) => (
         <span className="font-semibold text-white">
-          ${item.precio_venta.toLocaleString('es-CL')}
+          {item.precio_venta != null
+            ? `$${item.precio_venta.toLocaleString('es-CL')}`
+            : '—'}
         </span>
       ),
     },
@@ -226,6 +253,56 @@ export function ProductosPage() {
         </Button>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex items-end gap-4">
+        {/* Search */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Buscar productos..."
+            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+          />
+          {search && (
+            <button
+              onClick={() => {
+                setSearch('');
+                setPage(1);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-zinc-800 rounded transition-colors"
+              title="Limpiar búsqueda"
+            >
+              <X className="w-5 h-5 text-zinc-500 hover:text-white" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter by Tipo Producto */}
+        <div className="w-64">
+          <CustomSelect
+            label="Filtrar por tipo"
+            placeholder="Todos"
+            options={[
+              { value: 0, label: 'Todos los tipos' },
+              ...tiposProducto.map((tipo) => ({
+                value: tipo.id_tipo,
+                label: tipo.nombre_tipo_producto,
+              })),
+            ]}
+            value={selectedTipoProducto}
+            onChange={(value) => {
+              setSelectedTipoProducto(value ? Number(value) : undefined);
+              setPage(1);
+            }}
+          />
+        </div>
+      </div>
+
       {/* Table */}
       <DataTable
         data={productos}
@@ -233,10 +310,34 @@ export function ProductosPage() {
         keyField="id_producto"
         isLoading={isLoading}
         error={error?.message}
-        searchPlaceholder="Buscar productos..."
         emptyMessage="No hay productos registrados"
         actions={tableActions}
       />
+
+      {/* Pagination */}
+      <div className="flex items-center justify-center gap-2">
+        <Button
+          variant="secondary"
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+        >
+          Anterior
+        </Button>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-zinc-400">
+            Página {page} de {pages}
+          </span>
+        </div>
+
+        <Button
+          variant="secondary"
+          onClick={() => setPage(Math.min(pages, page + 1))}
+          disabled={page === pages}
+        >
+          Siguiente
+        </Button>
+      </div>
 
       {/* Create/Edit Modal */}
       <Modal
@@ -257,6 +358,24 @@ export function ProductosPage() {
             placeholder="Ej: Collar de plata"
             error={errors.nombre_producto?.message}
             {...register('nombre_producto')}
+          />
+
+          <Controller
+            name="id_tipo_producto"
+            control={control}
+            render={({ field }) => (
+              <CustomSelect
+                label="Tipo de producto"
+                placeholder="Selecciona un tipo"
+                options={tiposProducto.map((tipo) => ({
+                  value: tipo.id_tipo,
+                  label: tipo.nombre_tipo_producto,
+                }))}
+                value={field.value}
+                onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                error={errors.id_tipo_producto?.message}
+              />
+            )}
           />
 
           <div className="space-y-2">

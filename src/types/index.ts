@@ -81,6 +81,8 @@ export interface Producto {
   usuario?: string;
   created_at: string;
   updated_at: string;
+  id_tipo_producto?: number;
+  nombre_tipo_producto?: string;
 }
 
 export interface CreateProductoDto {
@@ -88,6 +90,7 @@ export interface CreateProductoDto {
   nombre_producto: string;
   descripcion?: string;
   precio_venta: number;
+  id_tipo_producto?: number;
 }
 
 export interface UpdateProductoDto {
@@ -273,6 +276,20 @@ export interface CreateCategoriaDto {
 
 export interface UpdateCategoriaDto {
   nombre_categoria?: string;
+}
+
+// Tipo de Producto
+export interface tipoProducto {
+  id_tipo: number;
+  nombre_tipo_producto: string;
+}
+
+export interface CreateTipoProductoDto {
+  nombre_tipo_producto: string;
+}
+
+export interface UpdateTipoProductoDto {
+  nombre_tipo_producto?: string;
 }
 
 // API Response
