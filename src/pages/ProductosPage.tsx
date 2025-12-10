@@ -188,12 +188,32 @@ export function ProductosPage() {
       ),
     },
     {
+      key: 'stock_actual',
+      label: 'Stock',
+      sortable: true,
+      render: (item: Producto) => (
+        <p className="font-medium text-white">{item.stock_actual || '—'}</p>
+      ),
+    },
+        {
       key: 'nombre_tipo_producto',
       label: 'Tipo',
       sortable: true,
       render: (item: Producto) => (
         <p className="font-medium text-white">{item.nombre_tipo_producto || '—'}</p>
       ),
+    },
+    {
+      key: 'joya',
+      label: 'Joya',
+      sortable: true,
+      render: (item: Producto) => item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—',
+    },
+    {
+      key: 'costo',
+      label: 'Costo total',
+      sortable: true,
+      render: (item: Producto) => item.costo ? `$${Math.round(Number(item.costo)).toLocaleString('es-CL')}` : '—',
     },
     {
       key: 'precio_venta',
