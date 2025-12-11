@@ -2,26 +2,23 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Trash2, Power, Package, Search, X } from 'lucide-react';
+import { Plus, Pencil, Search, X, Power } from 'lucide-react';
 import { toast } from 'sonner';
+import api from '../services/api';
 import { productoService, tipoProductoService } from '../services/entities.service';
 import { productoSchema, ProductoFormData } from '../schemas';
 import { Producto } from '../types';
-import {
-  DataTable,
-  Modal,
-  ConfirmDialog,
-  StatusBadge,
-  Button,
-  Input,
-  CustomSelect,
-} from '../components/ui';
+import { DataTable, Modal, ConfirmDialog, StatusBadge, Button, Input, CustomSelect } from '../components/ui';
+import { InsumoSelector, InsumoSeleccionado } from '../components/ui/InsumoSelectorModal';
 
 export function ProductosPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isInsumosModalOpen, setIsInsumosModalOpen] = useState(false);
+  const [isConfirmPublicadoOpen, setIsConfirmPublicadoOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
+  const [isLoadingInsumos, setIsLoadingInsumos] = useState(false);
+  const [insumosTemporales, setInsumosTemporales] = useState<InsumoSeleccionado[]>([]);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -41,7 +38,7 @@ export function ProductosPage() {
     queryFn: tipoProductoService.getAll,
   });
 
-  // Form
+  // Form principal
   const {
     register,
     handleSubmit,
@@ -54,7 +51,7 @@ export function ProductosPage() {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: productoService.create,
+    mutationFn: (data: any) => api.post('/productos', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] });
       toast.success('Producto creado exitosamente');
@@ -66,8 +63,7 @@ export function ProductosPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ProductoFormData> }) =>
-      productoService.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: any }) => api.put(`/productos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] });
       toast.success('Producto actualizado exitosamente');
@@ -78,27 +74,26 @@ export function ProductosPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: productoService.delete,
+  const updateInsumosMutation = useMutation({
+    mutationFn: ({ id, insumos }: { id: number; insumos: any[] }) =>
+      api.put(`/productos/${id}/insumos`, { insumos }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] });
-      toast.success('Producto eliminado exitosamente');
-      setIsDeleteDialogOpen(false);
-      setSelectedProducto(null);
+      toast.success('Insumos actualizados exitosamente');
+      handleCloseInsumosModal();
     },
     onError: (error: Error) => {
       toast.error(error.message);
     },
   });
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: (producto: Producto) =>
-      productoService.update(producto.id_producto, {
-        status: producto.status === 'activo' ? 'inactivo' : 'activo',
-      }),
+  const togglePublicadoMLMutation = useMutation({
+    mutationFn: (id: number) => api.patch(`/productos/${id}/toggle-publicado-ml`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] });
-      toast.success('Estado actualizado');
+      toast.success('Estado de publicación actualizado');
+      setIsConfirmPublicadoOpen(false);
+      setSelectedProducto(null);
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -126,13 +121,46 @@ export function ProductosPage() {
       descripcion: producto.descripcion || '',
       precio_venta: producto.precio_venta,
       id_tipo_producto: producto.id_tipo_producto ?? undefined,
+      valor_caja: producto.valor_caja,
+      valor_cadena: producto.valor_cadena,
+      joya: producto.joya,
+      costo: producto.costo,
     });
     setIsModalOpen(true);
   };
 
-  const handleOpenDelete = (producto: Producto) => {
+  const handleOpenInsumosModal = async (producto: Producto) => {
     setSelectedProducto(producto);
-    setIsDeleteDialogOpen(true);
+    setIsInsumosModalOpen(true);
+    setIsLoadingInsumos(true);
+    
+    try {
+      const response = await api.get(`/productos/${producto.id_producto}/insumos`);
+      const productoData = response.data?.data || [];
+      
+      const insumosCargados: InsumoSeleccionado[] = productoData
+        .filter((row: any) => row.id_insumo !== null)
+        .map((row: any) => ({
+          id_insumo: row.id_insumo,
+          nombre_insumo: row.nombre_insumo || `Insumo ${row.id_insumo}`,
+          cantidad: row.cantidad || 0,
+          precio_unitario: row.precio_insumo,
+          subtotal: row.precio_insumo ? row.cantidad * row.precio_insumo : undefined,
+        }));
+      
+      setInsumosTemporales(insumosCargados);
+    } catch (error) {
+      console.error('Error al cargar insumos del producto:', error);
+      toast.error('Error al cargar los insumos del producto');
+      setInsumosTemporales([]);
+    } finally {
+      setIsLoadingInsumos(false);
+    }
+  };
+
+  const handleOpenPublicadoConfirm = (producto: Producto) => {
+    setSelectedProducto(producto);
+    setIsConfirmPublicadoOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -141,8 +169,14 @@ export function ProductosPage() {
     reset();
   };
 
-  const onSubmit = (data: ProductoFormData) => {
-    const cleanedData = {
+  const handleCloseInsumosModal = () => {
+    setIsInsumosModalOpen(false);
+    setSelectedProducto(null);
+    setInsumosTemporales([]);
+  };
+
+  const onSubmit = async (data: ProductoFormData) => {
+    const payload = {
       sku: data.sku,
       nombre_producto: data.nombre_producto,
       descripcion: data.descripcion || undefined,
@@ -150,10 +184,31 @@ export function ProductosPage() {
       id_tipo_producto: data.id_tipo_producto || undefined,
     };
 
-    if (selectedProducto) {
-      updateMutation.mutate({ id: selectedProducto.id_producto, data: cleanedData });
-    } else {
-      createMutation.mutate(cleanedData);
+    try {
+      if (selectedProducto) {
+        await updateMutation.mutateAsync({ id: selectedProducto.id_producto, data: payload });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
+    } catch (error: any) {
+      console.error('Error al guardar producto:', error);
+      toast.error(error.response?.data?.error || 'Error al guardar el producto');
+    }
+  };
+
+  const onSubmitInsumos = async () => {
+    if (!selectedProducto) return;
+
+    const payload = insumosTemporales.map((item) => ({
+      id_insumo: item.id_insumo,
+      cantidad: item.cantidad,
+    }));
+
+    try {
+      await updateInsumosMutation.mutateAsync({ id: selectedProducto.id_producto, insumos: payload });
+    } catch (error: any) {
+      console.error('Error al guardar insumos:', error);
+      toast.error(error.response?.data?.error || 'Error al guardar los insumos');
     }
   };
 
@@ -173,9 +228,6 @@ export function ProductosPage() {
       sortable: true,
       render: (item: Producto) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center">
-            <Package className="w-5 h-5 text-zinc-500" />
-          </div>
           <div>
             <p className="font-medium text-white">{item.nombre_producto}</p>
             {item.descripcion && (
@@ -195,7 +247,7 @@ export function ProductosPage() {
         <p className="font-medium text-white">{item.stock_actual || '—'}</p>
       ),
     },
-        {
+    {
       key: 'nombre_tipo_producto',
       label: 'Tipo',
       sortable: true,
@@ -205,9 +257,16 @@ export function ProductosPage() {
     },
     {
       key: 'joya',
-      label: 'Joya',
-      sortable: true,
-      render: (item: Producto) => item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—',
+      label: 'Joyas',
+      sortable: false,
+      render: (item: Producto) => (
+        <button
+          onClick={() => handleOpenInsumosModal(item)}
+          className="font-medium text-amber-500 hover:text-amber-400 hover:underline transition-colors"
+        >
+          {item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—'}
+        </button>
+      ),
     },
     {
       key: 'costo',
@@ -228,18 +287,20 @@ export function ProductosPage() {
       ),
     },
     {
-      key: 'status',
-      label: 'Estado',
-      render: (item: Producto) => <StatusBadge status={item.status} />,
+      key: 'publicado_ml',
+      label: 'Publicado ML',
+      render: (item: Producto) => (
+        <StatusBadge status={item.publicado_ml && item.publicado_ml !== '' && item.publicado_ml === 'si' ? 'activo' : 'inactivo'} />
+      ),
     },
   ];
 
   const tableActions = (item: Producto) => (
     <div className="flex items-center justify-end gap-2">
       <button
-        onClick={() => toggleStatusMutation.mutate(item)}
+        onClick={() => handleOpenPublicadoConfirm(item)}
         className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg transition-colors"
-        title={item.status === 'activo' ? 'Desactivar' : 'Activar'}
+        title={item.publicado_ml && item.publicado_ml !== '' && item.publicado_ml === 'si' ? 'Pausar publicación' : 'Publicar'}
       >
         <Power className="w-4 h-4" />
       </button>
@@ -249,13 +310,6 @@ export function ProductosPage() {
         title="Editar"
       >
         <Pencil className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => handleOpenDelete(item)}
-        className="p-2 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-lg transition-colors"
-        title="Eliminar"
-      >
-        <Trash2 className="w-4 h-4" />
       </button>
     </div>
   );
@@ -359,11 +413,12 @@ export function ProductosPage() {
         </Button>
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Modal: Crear/Editar Producto */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={selectedProducto ? 'Editar Producto' : 'Nuevo Producto'}
+        size="md"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
@@ -372,14 +427,6 @@ export function ProductosPage() {
             error={errors.sku?.message}
             {...register('sku')}
           />
-
-          <Input
-            label="Nombre del producto"
-            placeholder="Ej: Collar de plata"
-            error={errors.nombre_producto?.message}
-            {...register('nombre_producto')}
-          />
-
           <Controller
             name="id_tipo_producto"
             control={control}
@@ -397,6 +444,15 @@ export function ProductosPage() {
               />
             )}
           />
+
+          <Input
+            label="Nombre del producto"
+            placeholder="Ej: Collar de plata"
+            error={errors.nombre_producto?.message}
+            {...register('nombre_producto')}
+          />
+
+          
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-300">
@@ -419,6 +475,30 @@ export function ProductosPage() {
               <p className="text-sm text-red-400">{errors.descripcion.message}</p>
             )}
           </div>
+          <div className="flex gap-3">
+            <Input
+            label="Precio de joya"
+            type="number"
+            placeholder="0"
+            error={errors.joya?.message}
+            {...register('joya', { valueAsNumber: true })}
+          />
+           <Input
+            label="Precio de cadena"
+            type="number"
+            placeholder="0"
+            error={errors.valor_cadena?.message}
+            {...register('valor_cadena', { valueAsNumber: true })}
+          />
+          </div>
+          <div className='flex gap-3 readonly:bg-zinc-800'> 
+            <Input
+            label="Precio de caja"
+            type="number"
+            placeholder="0"
+            error={errors.valor_caja?.message}
+            {...register('valor_caja', { valueAsNumber: true })}
+          /> 
 
           <Input
             label="Precio de venta"
@@ -427,6 +507,8 @@ export function ProductosPage() {
             error={errors.precio_venta?.message}
             {...register('precio_venta', { valueAsNumber: true })}
           />
+          </div>
+           
 
           <div className="flex gap-3 pt-4">
             <Button
@@ -448,15 +530,55 @@ export function ProductosPage() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation */}
+      {/* Modal: Gestionar Insumos del Producto */}
+      <Modal
+        isOpen={isInsumosModalOpen}
+        onClose={handleCloseInsumosModal}
+        title={` ${selectedProducto?.sku}- ${selectedProducto?.nombre_producto}`}
+        size="lg"
+      >
+        <div className="space-y-6">
+          <InsumoSelector
+            items={insumosTemporales}
+            onChange={setInsumosTemporales}
+            isLoadingItems={isLoadingInsumos}
+            title="Costo del producto"
+          />
+
+          <div className="flex gap-3 pt-4 border-t border-zinc-800">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseInsumosModal}
+              className="flex-1"
+              disabled={updateInsumosMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={onSubmitInsumos}
+              isLoading={updateInsumosMutation.isPending}
+              className="flex-1"
+            >
+              Guardar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Confirm Dialog: Cambiar estado publicado_ml */}
       <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={() => selectedProducto && deleteMutation.mutate(selectedProducto.id_producto)}
-        title="Eliminar Producto"
-        message={`¿Estás seguro de eliminar "${selectedProducto?.nombre_producto}"? Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
-        isLoading={deleteMutation.isPending}
+        isOpen={isConfirmPublicadoOpen}
+        onClose={() => {
+          setIsConfirmPublicadoOpen(false);
+          setSelectedProducto(null);
+        }}
+        onConfirm={() => selectedProducto && togglePublicadoMLMutation.mutate(selectedProducto.id_producto)}
+        title="Cambiar estado de publicación"
+        message={`¿${selectedProducto?.publicado_ml && selectedProducto?.publicado_ml !== '' && selectedProducto?.publicado_ml === 'si' ? 'Pausar' : 'Publicar'} "${selectedProducto?.nombre_producto}" en MercadoLibre?`}
+        confirmText={selectedProducto?.publicado_ml && selectedProducto?.publicado_ml !== '' && selectedProducto?.publicado_ml === 'si' ? 'Pausar' : 'Publicar'}
+        isLoading={togglePublicadoMLMutation.isPending}
       />
     </div>
   );

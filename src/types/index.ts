@@ -83,10 +83,15 @@ export interface Producto {
   updated_at: string;
   id_tipo_producto?: number;
   nombre_tipo_producto?: string;
-  costo?: string;
-  joya?: string;
+  costo?: number;
+  joya?: number;
   stock_actual?: number;
-  publicado_ml?: string;
+  publicado_ml: '';
+  valor_caja?: number;
+  valor_cadena?: number;
+  despacho?: number;
+  premium?: number;
+  utilidad?: number;
 }
 
 export interface CreateProductoDto {

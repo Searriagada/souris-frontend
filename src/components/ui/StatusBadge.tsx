@@ -18,7 +18,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       <span
         className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-zinc-400'}`}
       />
-      {isActive ? 'Activo' : 'Inactivo'}
+      {isActive ? 'Publicado' : 'Pendiente'}
     </span>
   );
 }

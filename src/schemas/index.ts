@@ -81,6 +81,44 @@ export const productoSchema = z.object({
     .int('Debe ser un número entero')
     .positive('Debe ser un número positivo')
     .optional(),
+  costo: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  cadena: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  caja: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  despacho: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  premiun: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  neto: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  iva: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  total: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  valor_caja: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El valor no puede ser negativo')
+    .optional(),
+  valor_cadena: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El valor no puede ser negativo')
+    .optional(),
+    joya : z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El valor no puede ser negativo'),
+    utilidad : z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El valor no puede ser negativo'),
 });
 
 // Caja schemas
