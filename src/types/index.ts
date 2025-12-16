@@ -92,6 +92,7 @@ export interface Producto {
   despacho?: number;
   premium?: number;
   utilidad?: number;
+  id_cadena?: number;
 }
 
 export interface CreateProductoDto {

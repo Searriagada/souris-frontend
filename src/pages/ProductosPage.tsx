@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Search, X, Power } from 'lucide-react';
+import { Plus, Pencil, Search, X, Power, Link } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import { productoService, tipoProductoService } from '../services/entities.service';
 import { productoSchema, ProductoFormData } from '../schemas';
-import { Producto } from '../types';
+import { Producto, Cadena } from '../types';
 import { DataTable, Modal, ConfirmDialog, StatusBadge, Button, Input, CustomSelect } from '../components/ui';
 import { InsumoSelector, InsumoSeleccionado } from '../components/ui/InsumoSelectorModal';
 
@@ -19,6 +19,7 @@ export function ProductosPage() {
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
   const [isLoadingInsumos, setIsLoadingInsumos] = useState(false);
   const [insumosTemporales, setInsumosTemporales] = useState<InsumoSeleccionado[]>([]);
+  const [selectedCadena, setSelectedCadena] = useState<number | null>(null);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -37,6 +38,16 @@ export function ProductosPage() {
     queryKey: ['tipo-producto'],
     queryFn: tipoProductoService.getAll,
   });
+
+  // Fetch cadenas disponibles
+  const { data: cadenasResponse } = useQuery({
+    queryKey: ['cadenas-selector'],
+    queryFn: async () => {
+      const response = await api.get('/cadenas');
+      return response.data?.data?.items || response.data?.data || [];
+    },
+  });
+  const cadenas: Cadena[] = cadenasResponse || [];
 
   // Form principal
   const {
@@ -75,8 +86,8 @@ export function ProductosPage() {
   });
 
   const updateInsumosMutation = useMutation({
-    mutationFn: ({ id, insumos }: { id: number; insumos: any[] }) =>
-      api.put(`/productos/${id}/insumos`, { insumos }),
+    mutationFn: ({ id, insumos, id_cadena }: { id: number; insumos: any[]; id_cadena: number | null }) =>
+      api.put(`/productos/${id}/insumos`, { insumos, id_cadena }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] });
       toast.success('Insumos actualizados exitosamente');
@@ -133,11 +144,15 @@ export function ProductosPage() {
     setSelectedProducto(producto);
     setIsInsumosModalOpen(true);
     setIsLoadingInsumos(true);
-    
+    console.log('producto.id_cadena:', producto.id_cadena);
+
+    // Cargar la cadena actual del producto
+    setSelectedCadena(producto.id_cadena ?? null);
+
     try {
       const response = await api.get(`/productos/${producto.id_producto}/insumos`);
       const productoData = response.data?.data || [];
-      
+
       const insumosCargados: InsumoSeleccionado[] = productoData
         .filter((row: any) => row.id_insumo !== null)
         .map((row: any) => ({
@@ -147,7 +162,7 @@ export function ProductosPage() {
           precio_unitario: row.precio_insumo,
           subtotal: row.precio_insumo ? row.cantidad * row.precio_insumo : undefined,
         }));
-      
+
       setInsumosTemporales(insumosCargados);
     } catch (error) {
       console.error('Error al cargar insumos del producto:', error);
@@ -173,6 +188,7 @@ export function ProductosPage() {
     setIsInsumosModalOpen(false);
     setSelectedProducto(null);
     setInsumosTemporales([]);
+    setSelectedCadena(null);
   };
 
   const onSubmit = async (data: ProductoFormData) => {
@@ -205,7 +221,11 @@ export function ProductosPage() {
     }));
 
     try {
-      await updateInsumosMutation.mutateAsync({ id: selectedProducto.id_producto, insumos: payload });
+      await updateInsumosMutation.mutateAsync({
+        id: selectedProducto.id_producto,
+        insumos: payload,
+        id_cadena: selectedCadena
+      });
     } catch (error: any) {
       console.error('Error al guardar insumos:', error);
       toast.error(error.response?.data?.error || 'Error al guardar los insumos');
@@ -452,7 +472,7 @@ export function ProductosPage() {
             {...register('nombre_producto')}
           />
 
-          
+
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-300">
@@ -477,38 +497,38 @@ export function ProductosPage() {
           </div>
           <div className="flex gap-3">
             <Input
-            label="Precio de joya"
-            type="number"
-            placeholder="0"
-            error={errors.joya?.message}
-            {...register('joya', { valueAsNumber: true })}
-          />
-           <Input
-            label="Precio de cadena"
-            type="number"
-            placeholder="0"
-            error={errors.valor_cadena?.message}
-            {...register('valor_cadena', { valueAsNumber: true })}
-          />
-          </div>
-          <div className='flex gap-3 readonly:bg-zinc-800'> 
+              label="Precio de joya"
+              type="number"
+              placeholder="0"
+              error={errors.joya?.message}
+              {...register('joya', { valueAsNumber: true })}
+            />
             <Input
-            label="Precio de caja"
-            type="number"
-            placeholder="0"
-            error={errors.valor_caja?.message}
-            {...register('valor_caja', { valueAsNumber: true })}
-          /> 
-
-          <Input
-            label="Precio de venta"
-            type="number"
-            placeholder="0"
-            error={errors.precio_venta?.message}
-            {...register('precio_venta', { valueAsNumber: true })}
-          />
+              label="Precio de cadena"
+              type="number"
+              placeholder="0"
+              error={errors.valor_cadena?.message}
+              {...register('valor_cadena', { valueAsNumber: true })}
+            />
           </div>
-           
+          <div className='flex gap-3 readonly:bg-zinc-800'>
+            <Input
+              label="Precio de caja"
+              type="number"
+              placeholder="0"
+              error={errors.valor_caja?.message}
+              {...register('valor_caja', { valueAsNumber: true })}
+            />
+
+            <Input
+              label="Precio de venta"
+              type="number"
+              placeholder="0"
+              error={errors.precio_venta?.message}
+              {...register('precio_venta', { valueAsNumber: true })}
+            />
+          </div>
+
 
           <div className="flex gap-3 pt-4">
             <Button
@@ -537,34 +557,82 @@ export function ProductosPage() {
         title={` ${selectedProducto?.sku}- ${selectedProducto?.nombre_producto}`}
         size="lg"
       >
-        <div className="space-y-6">
-          <InsumoSelector
-            items={insumosTemporales}
-            onChange={setInsumosTemporales}
-            isLoadingItems={isLoadingInsumos}
-            title="Costo del producto"
-          />
+        {(() => {
+          // Calcular totales en tiempo real
+          const totalInsumos = insumosTemporales.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+          const cadenaSeleccionada = cadenas.find((c) => c.id_cadena === selectedCadena);
+          const precioCadena = parseFloat(cadenaSeleccionada?.precio?.toString() || '0');
+          const totalGeneral = totalInsumos + precioCadena;
 
-          <div className="flex gap-3 pt-4 border-t border-zinc-800">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleCloseInsumosModal}
-              className="flex-1"
-              disabled={updateInsumosMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={onSubmitInsumos}
-              isLoading={updateInsumosMutation.isPending}
-              className="flex-1"
-            >
-              Guardar
-            </Button>
-          </div>
-        </div>
+          return (
+            <div className="space-y-6">
+              {/* Selector de Cadena */}
+              <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <Link className="w-5 h-5 text-amber-500" />
+                  <h3 className="text-white font-medium">Cadena del producto</h3>
+                </div>
+                <CustomSelect
+                  placeholder="Selecciona una cadena (opcional)"
+                  options={[
+                    { value: 0, label: 'Sin cadena' },
+                    ...cadenas.map((cadena) => ({
+                      value: cadena.id_cadena,
+                      label: `${cadena.nombre_cadena}${cadena.precio ? ` - $${parseFloat(cadena.precio.toString()).toLocaleString('es-CL')}` : ''}`,
+                    })),
+                  ]}
+                  value={selectedCadena ?? 0}
+                  onChange={(value) => setSelectedCadena(value && value !== 0 ? Number(value) : null)}
+                />
+              </div>
+
+              <InsumoSelector
+                items={insumosTemporales}
+                onChange={setInsumosTemporales}
+                isLoadingItems={isLoadingInsumos}
+                title="Insumos del producto"
+              />
+
+              {/* Resumen de costos */}
+              <div className="p-4 bg-zinc-800/30 rounded-lg border border-zinc-700">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Insumos:</span>
+                    <span>${totalInsumos.toLocaleString('es-CL')}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Cadena:</span>
+                    <span>${precioCadena.toLocaleString('es-CL')}</span>
+                  </div>
+                  <div className="flex justify-between text-white font-semibold pt-2 border-t border-zinc-700">
+                    <span>Costo total:</span>
+                    <span className="text-amber-400">${totalGeneral.toLocaleString('es-CL')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-zinc-800">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCloseInsumosModal}
+                  className="flex-1"
+                  disabled={updateInsumosMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={onSubmitInsumos}
+                  isLoading={updateInsumosMutation.isPending}
+                  className="flex-1"
+                >
+                  Guardar
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
       {/* Confirm Dialog: Cambiar estado publicado_ml */}
