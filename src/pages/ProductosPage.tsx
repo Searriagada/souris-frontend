@@ -2,23 +2,27 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Search, X, Power, Link } from 'lucide-react';
+import { Plus, Pencil, Search, X, Power, Link, Sticker } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import { productoService, tipoProductoService } from '../services/entities.service';
 import { productoSchema, ProductoFormData } from '../schemas';
 import { Producto, Cadena } from '../types';
 import { DataTable, Modal, ConfirmDialog, StatusBadge, Button, Input, CustomSelect } from '../components/ui';
-import { InsumoSelector, InsumoSeleccionado } from '../components/ui/InsumoSelectorModal';
+import { InsumoSelector, InsumoSeleccionado } from '../components/ui/SelectInsumoManufactura';
+import { InsumoSelectorEmbalaje, InsumoEmbalajeSeleccionado } from '../components/ui/SelectInsumoEmbalaje';
 
 export function ProductosPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInsumosModalOpen, setIsInsumosModalOpen] = useState(false);
+  const [isEmbalajeModalOpen, setIsEmbalajeModalOpen] = useState(false);
   const [isConfirmPublicadoOpen, setIsConfirmPublicadoOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
   const [isLoadingInsumos, setIsLoadingInsumos] = useState(false);
+  const [isLoadingEmbalaje, setIsLoadingEmbalaje] = useState(false);
   const [insumosTemporales, setInsumosTemporales] = useState<InsumoSeleccionado[]>([]);
+  const [embalajeTemporales, setEmbalajeTemporales] = useState<InsumoEmbalajeSeleccionado[]>([]);
   const [selectedCadena, setSelectedCadena] = useState<number | null>(null);
 
   const [page, setPage] = useState(1);
@@ -98,6 +102,19 @@ export function ProductosPage() {
     },
   });
 
+  const updateEmbalajesMutation = useMutation({
+    mutationFn: ({ id, insumos }: { id: number; insumos: any[] }) =>
+      api.put(`/productos/${id}/embalajes`, { insumos }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      toast.success('Insumos actualizados exitosamente');
+      handleCloseEmbalajeModal();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const togglePublicadoMLMutation = useMutation({
     mutationFn: (id: number) => api.patch(`/productos/${id}/toggle-publicado-ml`),
     onSuccess: () => {
@@ -135,7 +152,7 @@ export function ProductosPage() {
       valor_caja: producto.valor_caja,
       valor_cadena: producto.valor_cadena,
       joya: producto.joya,
-      costo: producto.costo,
+      costo: producto.costo_total,
     });
     setIsModalOpen(true);
   };
@@ -173,6 +190,42 @@ export function ProductosPage() {
     }
   };
 
+  const handleOpenEmbalajeModal = async (producto: Producto) => {
+    setSelectedProducto(producto);
+    setIsEmbalajeModalOpen(true);
+    setIsLoadingEmbalaje(true);
+    setSelectedCadena(producto.id_cadena ?? null);
+
+    try {
+      const response = await api.get(`/productos/${producto.id_producto}/embalajes`);
+      const productoData = response.data?.data || [];
+
+      const embalajesCargados: InsumoEmbalajeSeleccionado[] = productoData
+        .filter((row: any) => row.id_insumo !== null)
+        .map((row: any) => ({
+          id_insumo: row.id_insumo,
+          nombre_insumo: row.nombre_insumo || `Insumo ${row.id_insumo}`,
+          cantidad: row.cantidad || 0,
+          precio_unitario: row.precio_insumo,
+          subtotal: row.precio_insumo ? row.cantidad * row.precio_insumo : undefined,
+        }));
+
+      setEmbalajeTemporales(embalajesCargados);
+    } catch (error) {
+      console.error('Error al cargar insumos del producto:', error);
+      toast.error('Error al cargar los insumos del producto');
+      setEmbalajeTemporales([]);
+    } finally {
+      setIsLoadingEmbalaje(false);
+    }
+  };
+
+  const handleCloseEmbalajeModal = () => {
+    setIsEmbalajeModalOpen(false);
+    setSelectedProducto(null);
+    setEmbalajeTemporales([]);
+    setSelectedCadena(null);
+  };
   const handleOpenPublicadoConfirm = (producto: Producto) => {
     setSelectedProducto(producto);
     setIsConfirmPublicadoOpen(true);
@@ -231,7 +284,24 @@ export function ProductosPage() {
       toast.error(error.response?.data?.error || 'Error al guardar los insumos');
     }
   };
+  const onSubmitEmbalaje = async () => {
+    if (!selectedProducto) return;
 
+    const payload = embalajeTemporales.map((item) => ({
+      id_insumo: item.id_insumo,
+      cantidad: item.cantidad,
+    }));
+
+    try {
+      await updateEmbalajesMutation.mutateAsync({
+        id: selectedProducto.id_producto,
+        insumos: payload,
+      });
+    } catch (error: any) {
+      console.error('Error al guardar embalajes:', error);
+      toast.error(error.response?.data?.error || 'Error al guardar los embalajes');
+    }
+  };
   // Table columns
   const columns = [
     {
@@ -289,10 +359,17 @@ export function ProductosPage() {
       ),
     },
     {
-      key: 'costo',
+      key: 'costo_total',
       label: 'Costo total',
       sortable: true,
-      render: (item: Producto) => item.costo ? `$${Math.round(Number(item.costo)).toLocaleString('es-CL')}` : '—',
+      render: (row: Producto) => (
+        <button
+          onClick={() => handleOpenEmbalajeModal(row)}
+          className=" font-medium text-amber-500 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
+        >
+          ${row.costo_total ? Math.round(Number(row.costo_total)).toLocaleString('es-CL') : '0'}
+        </button>
+      ),
     },
     {
       key: 'precio_venta',
@@ -340,7 +417,6 @@ export function ProductosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif text-white">Productos</h1>
-          <p className="text-zinc-500">Gestiona los productos de tu catálogo</p>
         </div>
         <Button onClick={handleOpenCreate} leftIcon={<Plus className="w-5 h-5" />}>
           Nuevo Producto
@@ -590,7 +666,7 @@ export function ProductosPage() {
                 items={insumosTemporales}
                 onChange={setInsumosTemporales}
                 isLoadingItems={isLoadingInsumos}
-                title="Insumos del producto"
+                title="Costeo de insumos"
               />
 
               {/* Resumen de costos */}
@@ -625,6 +701,70 @@ export function ProductosPage() {
                   type="button"
                   onClick={onSubmitInsumos}
                   isLoading={updateInsumosMutation.isPending}
+                  className="flex-1"
+                >
+                  Guardar
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
+
+      {/* Modal: Gestionar Embalajes del Producto */}
+      <Modal
+        isOpen={isEmbalajeModalOpen}
+        onClose={handleCloseEmbalajeModal}
+        title={`${selectedProducto?.sku} - ${selectedProducto?.nombre_producto}`}
+        size="lg"
+      >
+        {(() => {
+          const totalEmbalajes = embalajeTemporales.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+          const precioJoya = parseFloat(selectedProducto?.joya?.toString() || '0');
+          const totalGeneral = totalEmbalajes + precioJoya;
+
+          return (
+            <div className="space-y-6">
+              <InsumoSelectorEmbalaje
+                items={embalajeTemporales}
+                onChange={setEmbalajeTemporales}
+                isLoadingItems={isLoadingEmbalaje}
+                title="Costo empaque"
+              />
+
+              {/* Resumen de costos */}
+              <div className="p-4 bg-zinc-800/30 rounded-lg border border-zinc-700">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Precio joya:</span>
+                    <span>${precioJoya.toLocaleString('es-CL')}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Embalajes:</span>
+                    <span>${totalEmbalajes.toLocaleString('es-CL')}</span>
+                  </div>
+
+                  <div className="flex justify-between text-white font-semibold pt-2 border-t border-zinc-700">
+                    <span>Costo total:</span>
+                    <span className="text-amber-400">${totalGeneral.toLocaleString('es-CL')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-zinc-800">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCloseEmbalajeModal}
+                  className="flex-1"
+                  disabled={updateEmbalajesMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={onSubmitEmbalaje}
+                  isLoading={updateEmbalajesMutation.isPending}
                   className="flex-1"
                 >
                   Guardar

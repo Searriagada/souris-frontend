@@ -9,7 +9,7 @@ import {cajaService,cadenaService,plataformaService} from '../services/entities.
 import {cajaSchema,cadenaSchema,plataformaSchema,CajaFormData,CadenaFormData,PlataformaFormData} from '../schemas';
 import { Caja, Cadena, PlataformaVenta } from '../types';
 import {DataTable,Modal,ConfirmDialog,StatusBadge,Button,Input} from '../components/ui';
-import { InsumoSelector, InsumoSeleccionado } from '../components/ui/InsumoSelectorModal';
+import { InsumoSelector, InsumoSeleccionado } from '../components/ui/SelectInsumoManufactura';
 
 type TabType = 'cajas' | 'cadenas' | 'plataformas';
 

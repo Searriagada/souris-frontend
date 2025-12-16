@@ -83,7 +83,7 @@ export interface Producto {
   updated_at: string;
   id_tipo_producto?: number;
   nombre_tipo_producto?: string;
-  costo?: number;
+  costo_total?: number;
   joya?: number;
   stock_actual?: number;
   publicado_ml: '';

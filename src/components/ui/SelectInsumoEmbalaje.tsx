@@ -5,8 +5,15 @@ import { Button } from './Button';
 import api from '../../services/api';
 import { Insumo } from '../../types/index';
 
+const formatCLP = (value?: number | string): string | null => {
+  if (value === undefined || value === null) return null;
+  const num = Number(value);
+  if (Number.isNaN(num)) return null;
+  return num.toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+};
+
 // ==================== TYPES ====================
-export interface InsumoSeleccionado {
+export interface InsumoEmbalajeSeleccionado {
   id_insumo: number;
   nombre_insumo: string;
   cantidad: number;
@@ -14,20 +21,20 @@ export interface InsumoSeleccionado {
   subtotal?: number;
 }
 
-interface InsumoSelectorProps {
-  items: InsumoSeleccionado[];
-  onChange: (items: InsumoSeleccionado[]) => void;
+interface InsumoSelectorEmbalajeProps {
+  items: InsumoEmbalajeSeleccionado[];
+  onChange: (items: InsumoEmbalajeSeleccionado[]) => void;
   isLoadingItems?: boolean;
   title?: string;
 }
 
 // ==================== COMPONENT ====================
-export function InsumoSelector({ 
+export function InsumoSelectorEmbalaje({ 
   items, 
   onChange, 
   isLoadingItems = false,
-  title = 'Insumos'
-}: InsumoSelectorProps) {
+  title = 'Embalajes'
+}: InsumoSelectorEmbalajeProps) {
   const [selectedInsumoId, setSelectedInsumoId] = useState<number | ''>('');
   const [cantidad, setCantidad] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,12 +59,12 @@ export function InsumoSelector({
   }, [isDropdownOpen]);
 
   const { data: insumosDisponibles = [], isLoading } = useQuery({
-    queryKey: ['insumos-selector'],
+    queryKey: ['insumos-selector-embalaje'],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append('page', '1');
       params.append('limit', '500');
-      const response = await api.get(`/insumos/manufacturing?${params}`);
+      const response = await api.get(`/insumos/packaging?${params}`);
       return response.data?.data?.items || [];
     },
   });
@@ -102,7 +109,7 @@ export function InsumoSelector({
       };
       onChange(updated);
     } else {
-      const nuevoItem: InsumoSeleccionado = {
+      const nuevoItem: InsumoEmbalajeSeleccionado = {
         id_insumo: insumo.id_insumo,
         nombre_insumo: insumo.nombre_insumo,
         cantidad,
@@ -194,9 +201,9 @@ export function InsumoSelector({
                               <span className="text-xs text-zinc-500">{insumo.nombre_categoria}</span>
                             )}
                           </div>
-                          {insumo.precio_insumo && (
+                          {formatCLP(insumo.precio_insumo) && (
                             <span className="text-xs text-zinc-500">
-                              ${insumo.precio_insumo.toLocaleString('es-CL')}
+                              ${formatCLP(insumo.precio_insumo)}
                             </span>
                           )}
                         </div>
@@ -278,10 +285,10 @@ export function InsumoSelector({
                   <span className="px-2 py-1 bg-zinc-800 rounded text-zinc-300 text-sm">{item.cantidad}</span>
                 </div>
                 <div className="col-span-2 text-right text-zinc-400 text-sm">
-                  {item.precio_unitario ? `$${item.precio_unitario.toLocaleString('es-CL')}` : '-'}
+                  {formatCLP(item.precio_unitario) ? `$${formatCLP(item.precio_unitario)}` : '-'}
                 </div>
                 <div className="col-span-2 text-right text-amber-400 font-medium text-sm">
-                  {item.subtotal ? `$${item.subtotal.toLocaleString('es-CL')}` : '-'}
+                  {formatCLP(item.subtotal) ? `$${formatCLP(item.subtotal)}` : '-'}
                 </div>
                 <div className="col-span-1 flex justify-end gap-1">
                   <button
@@ -310,7 +317,7 @@ export function InsumoSelector({
                   Total:
                 </div>
                 <div className="col-span-2 text-right text-amber-400 font-semibold">
-                  ${total.toLocaleString('es-CL')}
+                  ${formatCLP(total)}
                 </div>
                 <div className="col-span-1"></div>
               </div>
@@ -330,4 +337,4 @@ export function InsumoSelector({
   );
 }
 
-export default InsumoSelector;
+export default InsumoSelectorEmbalaje;

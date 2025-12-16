@@ -53,6 +53,7 @@ export const insumoService = {
     if (categoryId) params.append('categoryId', categoryId.toString());
 
     const response = await api.get<{
+      error: string;
       success: boolean;
       data: PaginatedResponse<Insumo>;
     }>(`/insumos?${params}`);
@@ -85,6 +86,7 @@ export const productoService = {
     if (tipoProducto) params.append('tipoProducto', tipoProducto.toString());
 
     const response = await api.get<{
+      error: string;
       success: boolean;
       data: PaginatedResponse<Producto>;
     }>(`/productos?${params}`);
