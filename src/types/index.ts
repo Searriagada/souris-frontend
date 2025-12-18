@@ -90,9 +90,14 @@ export interface Producto {
   valor_caja?: number;
   valor_cadena?: number;
   despacho?: number;
-  premium?: number;
+  comision?: number;
   utilidad?: number;
   id_cadena?: number;
+  monto_envio_gratis: number;
+  costo_embalaje?: number;
+  precio_venta_estimado?: number;
+  neto: number;
+  iva: number;
 }
 
 export interface CreateProductoDto {

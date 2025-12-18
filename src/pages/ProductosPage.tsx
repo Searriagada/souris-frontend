@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Search, X, Power, Link, Sticker } from 'lucide-react';
+import { Plus, Pencil, Search, X, Power, Link } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import { productoService, tipoProductoService } from '../services/entities.service';
@@ -11,6 +11,7 @@ import { Producto, Cadena } from '../types';
 import { DataTable, Modal, ConfirmDialog, StatusBadge, Button, Input, CustomSelect } from '../components/ui';
 import { InsumoSelector, InsumoSeleccionado } from '../components/ui/SelectInsumoManufactura';
 import { InsumoSelectorEmbalaje, InsumoEmbalajeSeleccionado } from '../components/ui/SelectInsumoEmbalaje';
+import { ProductoCostoModal } from '../components/ui/ProductoCostoModal';
 
 export function ProductosPage() {
   const queryClient = useQueryClient();
@@ -24,6 +25,8 @@ export function ProductosPage() {
   const [insumosTemporales, setInsumosTemporales] = useState<InsumoSeleccionado[]>([]);
   const [embalajeTemporales, setEmbalajeTemporales] = useState<InsumoEmbalajeSeleccionado[]>([]);
   const [selectedCadena, setSelectedCadena] = useState<number | null>(null);
+  const [isCostoModalOpen, setIsCostoModalOpen] = useState(false);
+  const [selectedProductoCosto, setSelectedProductoCosto] = useState<any>(null);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -244,6 +247,27 @@ export function ProductosPage() {
     setSelectedCadena(null);
   };
 
+  const handleOpenCostoModal = async (producto: Producto) => {
+    try {
+      const response = await api.get(`/productos/${producto.id_producto}/costo`);
+      const productoCostos = response.data?.data?.[0];
+      if (!productoCostos) {
+        toast.warning('No se pudieron cargar los datos');
+        return;
+      }
+      setSelectedProductoCosto(productoCostos);
+      setIsCostoModalOpen(true);
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al cargar costos');
+    }
+  };
+
+  const handleCloseCostoModal = () => {
+    setIsCostoModalOpen(false);
+    setSelectedProductoCosto(null);
+  };
+
   const onSubmit = async (data: ProductoFormData) => {
     const payload = {
       sku: data.sku,
@@ -352,7 +376,7 @@ export function ProductosPage() {
       render: (item: Producto) => (
         <button
           onClick={() => handleOpenInsumosModal(item)}
-          className="font-medium text-amber-500 hover:text-amber-400 hover:underline transition-colors"
+          className="font-medium text-slate-00 hover:text-amber-400 hover:underline transition-colors"
         >
           {item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—'}
         </button>
@@ -365,7 +389,7 @@ export function ProductosPage() {
       render: (row: Producto) => (
         <button
           onClick={() => handleOpenEmbalajeModal(row)}
-          className=" font-medium text-amber-500 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
+          className=" font-medium text-slate-300 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
         >
           ${row.costo_total ? Math.round(Number(row.costo_total)).toLocaleString('es-CL') : '0'}
         </button>
@@ -375,12 +399,13 @@ export function ProductosPage() {
       key: 'precio_venta',
       label: 'Precio venta',
       sortable: true,
-      render: (item: Producto) => (
-        <span className="font-semibold text-white">
-          {item.precio_venta != null
-            ? `$${item.precio_venta.toLocaleString('es-CL')}`
-            : '—'}
-        </span>
+      render: (row: Producto) => (
+        <button
+          onClick={() => handleOpenCostoModal(row)}
+          className="font-medium text-green-500 hover:text-amber-500 hover:underline transition-colors"
+        >
+          ${row.precio_venta ? Math.round(Number(row.precio_venta)).toLocaleString('es-CL') : '0'}
+        </button>
       ),
     },
     {
@@ -408,6 +433,7 @@ export function ProductosPage() {
       >
         <Pencil className="w-4 h-4" />
       </button>
+
     </div>
   );
 
@@ -774,6 +800,18 @@ export function ProductosPage() {
           );
         })()}
       </Modal>
+
+      
+      <ProductoCostoModal
+        isOpen={isCostoModalOpen}
+        onClose={handleCloseCostoModal}
+        producto={selectedProductoCosto}
+        onUpdate={() => {
+          queryClient.invalidateQueries({ queryKey: ['productos'] });
+          setIsCostoModalOpen(false);
+          setSelectedProductoCosto(null);
+        }}
+      />
 
       {/* Confirm Dialog: Cambiar estado publicado_ml */}
       <ConfirmDialog
