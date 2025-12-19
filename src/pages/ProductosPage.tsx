@@ -138,7 +138,7 @@ export function ProductosPage() {
       sku: '',
       nombre_producto: '',
       descripcion: '',
-      precio_venta: 0,
+      //precio_venta: 0,
       id_tipo_producto: undefined,
     });
     setIsModalOpen(true);
@@ -150,12 +150,12 @@ export function ProductosPage() {
       sku: producto.sku,
       nombre_producto: producto.nombre_producto,
       descripcion: producto.descripcion || '',
-      precio_venta: producto.precio_venta,
+      //precio_venta: producto.precio_venta,
       id_tipo_producto: producto.id_tipo_producto ?? undefined,
-      valor_caja: producto.valor_caja,
-      valor_cadena: producto.valor_cadena,
-      joya: producto.joya,
-      costo: producto.costo_total,
+      //valor_caja: producto.valor_caja,
+      //valor_cadena: producto.valor_cadena,
+      //joya: producto.joya,
+      //costo: producto.costo_total,
     });
     setIsModalOpen(true);
   };
@@ -273,7 +273,7 @@ export function ProductosPage() {
       sku: data.sku,
       nombre_producto: data.nombre_producto,
       descripcion: data.descripcion || undefined,
-      precio_venta: data.precio_venta,
+      //precio_venta: data.precio_venta,
       id_tipo_producto: data.id_tipo_producto || undefined,
     };
 
@@ -333,7 +333,7 @@ export function ProductosPage() {
       label: 'SKU',
       sortable: true,
       render: (item: Producto) => (
-        <span className="font-mono text-amber-500">{item.sku}</span>
+        <span className="font-mono text-white-500">{item.sku}</span>
       ),
     },
     {
@@ -376,7 +376,7 @@ export function ProductosPage() {
       render: (item: Producto) => (
         <button
           onClick={() => handleOpenInsumosModal(item)}
-          className="font-medium text-slate-00 hover:text-amber-400 hover:underline transition-colors"
+          className="font-medium text-slate-300 hover:text-amber-400 hover:underline transition-colors"
         >
           {item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—'}
         </button>
@@ -545,7 +545,7 @@ export function ProductosPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             label="SKU"
-            placeholder="Ej: PROD-001"
+            placeholder="Ej: CN001"
             error={errors.sku?.message}
             {...register('sku')}
           />
@@ -578,10 +578,10 @@ export function ProductosPage() {
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-300">
-              Descripción
+              Nota
             </label>
             <textarea
-              placeholder="Descripción del producto..."
+              placeholder="Añadir información adicional"
               className="
                 w-full px-4 py-3 
                 bg-zinc-900 border border-zinc-800 rounded-lg
@@ -597,41 +597,6 @@ export function ProductosPage() {
               <p className="text-sm text-red-400">{errors.descripcion.message}</p>
             )}
           </div>
-          <div className="flex gap-3">
-            <Input
-              label="Precio de joya"
-              type="number"
-              placeholder="0"
-              error={errors.joya?.message}
-              {...register('joya', { valueAsNumber: true })}
-            />
-            <Input
-              label="Precio de cadena"
-              type="number"
-              placeholder="0"
-              error={errors.valor_cadena?.message}
-              {...register('valor_cadena', { valueAsNumber: true })}
-            />
-          </div>
-          <div className='flex gap-3 readonly:bg-zinc-800'>
-            <Input
-              label="Precio de caja"
-              type="number"
-              placeholder="0"
-              error={errors.valor_caja?.message}
-              {...register('valor_caja', { valueAsNumber: true })}
-            />
-
-            <Input
-              label="Precio de venta"
-              type="number"
-              placeholder="0"
-              error={errors.precio_venta?.message}
-              {...register('precio_venta', { valueAsNumber: true })}
-            />
-          </div>
-
-
           <div className="flex gap-3 pt-4">
             <Button
               type="button"

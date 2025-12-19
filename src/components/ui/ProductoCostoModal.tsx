@@ -77,14 +77,14 @@ export function ProductoCostoModal({
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-zinc-400">Costo total:</span><span className="text-white">{formatCLP(costoTotal)}</span></div>
             {(() => {
-              const gananciaReal = precioVenta - costoTotal - montoComision - despachoFinal;
+              const gananciaReal = precioVenta - costoTotal - montoComision - despachoFinal - iva;
               const esNegativa = gananciaReal < 0;
               return (
                 <>
                   <div className="flex justify-between"><span className="text-zinc-400">Utilidad esperada:</span><span className="text-white-400">{formatCLP(utilidad)}</span></div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400 font-semibold">Ganancia real:</span>
-                    <span className={`font-bold text-lg ${esNegativa ? 'text-red-400' : 'text-green-400'}`}>
+                    <span className={`font-bold text-lg ${esNegativa ? 'text-pink-400' : 'text-green-400'}`}>
                       {esNegativa ? '-' : ''}{formatCLP(Math.abs(gananciaReal))}
                     </span>
                   </div>
@@ -93,9 +93,9 @@ export function ProductoCostoModal({
             })()}
             <div className="border-t border-zinc-700 pt-3" />
             <div className="flex justify-between"><span className="text-zinc-400">Despacho:</span><span className="text-white">{formatCLP(despachoFinal)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Comisión ({(comision * 100).toFixed(1)}%):</span><span className="text-white">{formatCLP(montoComision)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Neto (sin IVA):</span><span className="text-white">{formatCLP(neto)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">IVA (19%):</span><span className="text-white">{formatCLP(iva)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-400">Comisión ({(comision * 100).toFixed(0)}%):</span><span className="text-white">{formatCLP(montoComision)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-400">Neto:</span><span className="text-white">{formatCLP(neto)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-400">IVA:</span><span className="text-white">{formatCLP(iva)}</span></div>
             <div className="flex justify-between"><span className="text-white font-semibold">Precio final:</span><span className="text-amber-400 font-bold text-lg">{formatCLP(precioVenta)}</span></div>
             <div className="flex justify-between py-2 px-2 bg-zinc-700/30 rounded"><span className="text-zinc-300 text-xs">Sugerido:</span><span className="text-amber-300">{formatCLP(precioEstimado)}</span></div>
           </div>

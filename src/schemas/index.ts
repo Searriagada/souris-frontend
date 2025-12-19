@@ -73,15 +73,15 @@ export const productoSchema = z.object({
     .max(300, 'La descripción no puede tener más de 300 caracteres')
     .optional()
     .or(z.literal('')),
-  precio_venta: z
-    .number({ invalid_type_error: 'Debe ser un número' })
-    .min(0, 'El precio no puede ser negativo'),
   id_tipo_producto: z
     .number()
     .int('Debe ser un número entero')
     .positive('Debe ser un número positivo')
     .optional(),
-  costo: z
+  /*costo: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El precio no puede ser negativo'),
+  precio_venta: z
     .number({ invalid_type_error: 'Debe ser un número' })
     .min(0, 'El precio no puede ser negativo'),
   cadena: z
@@ -113,12 +113,12 @@ export const productoSchema = z.object({
     .number({ invalid_type_error: 'Debe ser un número' })
     .min(0, 'El valor no puede ser negativo')
     .optional(),
-    joya : z
+  joya: z
     .number({ invalid_type_error: 'Debe ser un número' })
     .min(0, 'El valor no puede ser negativo'),
-    utilidad : z
+  utilidad: z
     .number({ invalid_type_error: 'Debe ser un número' })
-    .min(0, 'El valor no puede ser negativo'),
+    .min(0, 'El valor no puede ser negativo'),*/
 });
 
 // Caja schemas
