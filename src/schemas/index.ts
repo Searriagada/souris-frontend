@@ -78,6 +78,11 @@ export const productoSchema = z.object({
     .int('Debe ser un número entero')
     .positive('Debe ser un número positivo')
     .optional(),
+  utilidad: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'La utilidad no puede ser negativa'),
+  cantidad: z
+    .number({ invalid_type_error: 'Debe ser un número' })
   /*costo: z
     .number({ invalid_type_error: 'Debe ser un número' })
     .min(0, 'El precio no puede ser negativo'),

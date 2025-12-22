@@ -76,12 +76,13 @@ export interface Producto {
   sku: string;
   nombre_producto: string;
   descripcion?: string;
+  cantidad: number;
   precio_venta: number;
   status: 'activo' | 'inactivo';
   usuario?: string;
   created_at: string;
   updated_at: string;
-  id_tipo_producto?: number;
+  id_tipo?: number;
   nombre_tipo_producto?: string;
   costo_total?: number;
   joya?: number;

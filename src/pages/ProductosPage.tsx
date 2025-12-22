@@ -140,6 +140,7 @@ export function ProductosPage() {
       descripcion: '',
       //precio_venta: 0,
       id_tipo_producto: undefined,
+      utilidad: 1,
     });
     setIsModalOpen(true);
   };
@@ -150,12 +151,9 @@ export function ProductosPage() {
       sku: producto.sku,
       nombre_producto: producto.nombre_producto,
       descripcion: producto.descripcion || '',
-      //precio_venta: producto.precio_venta,
-      id_tipo_producto: producto.id_tipo_producto ?? undefined,
-      //valor_caja: producto.valor_caja,
-      //valor_cadena: producto.valor_cadena,
-      //joya: producto.joya,
-      //costo: producto.costo_total,
+      id_tipo_producto: producto.id_tipo ?? undefined,
+      cantidad: producto.stock_actual || 0,
+      utilidad: producto.utilidad || 1,
     });
     setIsModalOpen(true);
   };
@@ -273,8 +271,9 @@ export function ProductosPage() {
       sku: data.sku,
       nombre_producto: data.nombre_producto,
       descripcion: data.descripcion || undefined,
-      //precio_venta: data.precio_venta,
       id_tipo_producto: data.id_tipo_producto || undefined,
+      utilidad: data.utilidad,
+      cantidad: data.cantidad,
     };
 
     try {
@@ -344,11 +343,6 @@ export function ProductosPage() {
         <div className="flex items-center gap-3">
           <div>
             <p className="font-medium text-white">{item.nombre_producto}</p>
-            {item.descripcion && (
-              <p className="text-xs text-zinc-500 truncate max-w-xs">
-                {item.descripcion}
-              </p>
-            )}
           </div>
         </div>
       ),
@@ -371,7 +365,7 @@ export function ProductosPage() {
     },
     {
       key: 'joya',
-      label: 'Joyas',
+      label: 'Joya',
       sortable: false,
       render: (item: Producto) => (
         <button
@@ -383,16 +377,24 @@ export function ProductosPage() {
       ),
     },
     {
-      key: 'costo_total',
-      label: 'Costo total',
+      key: 'costo_embalaje',
+      label: 'Embalaje',
       sortable: true,
       render: (row: Producto) => (
         <button
           onClick={() => handleOpenEmbalajeModal(row)}
           className=" font-medium text-slate-300 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
         >
-          ${row.costo_total ? Math.round(Number(row.costo_total)).toLocaleString('es-CL') : '0'}
+          ${row.costo_embalaje ? Math.round(Number(row.costo_embalaje)).toLocaleString('es-CL') : '0'}
         </button>
+      ),
+    },
+    {
+      key: 'costo_total',
+      label: 'Costo total',
+      sortable: true,
+      render: (row: Producto) => (
+        <p className="font-medium text-white">${row.costo_total ? Math.round(Number(row.costo_total)).toLocaleString('es-CL') : '0'}</p>
       ),
     },
     {
@@ -573,9 +575,20 @@ export function ProductosPage() {
             error={errors.nombre_producto?.message}
             {...register('nombre_producto')}
           />
-
-
-
+          <Input
+            label="Porcentaje de utilidad"
+            placeholder="1 = 100%"
+            error={errors.utilidad?.message}
+            {...register('utilidad', { valueAsNumber: true })}
+          />
+          {!selectedProducto && (
+            <Input
+              label="Stock inicial"
+              placeholder="Ej: 10"
+              error={errors.cantidad?.message}
+              {...register('cantidad', { valueAsNumber: true })}
+            />
+          )}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-300">
               Nota
@@ -766,7 +779,7 @@ export function ProductosPage() {
         })()}
       </Modal>
 
-      
+
       <ProductoCostoModal
         isOpen={isCostoModalOpen}
         onClose={handleCloseCostoModal}
