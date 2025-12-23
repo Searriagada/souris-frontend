@@ -83,6 +83,11 @@ export const productoSchema = z.object({
     .min(0, 'La utilidad no puede ser negativa'),
   cantidad: z
     .number({ invalid_type_error: 'Debe ser un número' })
+    .optional(),
+  costo_fijo: z
+    .number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El costo fijo no puede ser negativo')
+    .optional(),
   /*costo: z
     .number({ invalid_type_error: 'Debe ser un número' })
     .min(0, 'El precio no puede ser negativo'),

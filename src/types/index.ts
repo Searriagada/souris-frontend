@@ -99,6 +99,7 @@ export interface Producto {
   precio_venta_estimado?: number;
   neto: number;
   iva: number;
+  costo_fijo?: number;
 }
 
 export interface CreateProductoDto {

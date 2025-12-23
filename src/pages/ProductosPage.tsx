@@ -27,6 +27,11 @@ export function ProductosPage() {
   const [selectedCadena, setSelectedCadena] = useState<number | null>(null);
   const [isCostoModalOpen, setIsCostoModalOpen] = useState(false);
   const [selectedProductoCosto, setSelectedProductoCosto] = useState<any>(null);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [stockForm, setStockForm] = useState({ cantidad: 0, nota: '' });
+  const [stockFormError, setStockFormError] = useState('');
+
+
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -131,6 +136,20 @@ export function ProductosPage() {
     },
   });
 
+  const updateStockMutation = useMutation({
+    mutationFn: ({ id, cantidad, nota }: { id: number; cantidad: number; nota: string }) =>
+      api.put(`/productos/${id}/stock`, { cantidad, nota }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos'] });
+      toast.success('Stock actualizado exitosamente');
+      handleCloseStockModal();
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.error || error.message || 'Error al actualizar stock';
+      toast.error(errorMsg);
+    },
+  });
+
   // Handlers
   const handleOpenCreate = () => {
     setSelectedProducto(null);
@@ -138,9 +157,10 @@ export function ProductosPage() {
       sku: '',
       nombre_producto: '',
       descripcion: '',
-      //precio_venta: 0,
+      cantidad: 0,
       id_tipo_producto: undefined,
       utilidad: 1,
+      costo_fijo: 0,
     });
     setIsModalOpen(true);
   };
@@ -154,6 +174,7 @@ export function ProductosPage() {
       id_tipo_producto: producto.id_tipo ?? undefined,
       cantidad: producto.stock_actual || 0,
       utilidad: producto.utilidad || 1,
+      costo_fijo: producto.costo_fijo || 0,
     });
     setIsModalOpen(true);
   };
@@ -266,6 +287,50 @@ export function ProductosPage() {
     setSelectedProductoCosto(null);
   };
 
+  const handleOpenStockModal = (producto: Producto) => {
+    setSelectedProducto(producto);
+    setStockForm({ cantidad: 0, nota: '' });
+    setStockFormError('');
+    setIsStockModalOpen(true);
+  };
+
+  const handleCloseStockModal = () => {
+    setIsStockModalOpen(false);
+    setSelectedProducto(null);
+    setStockForm({ cantidad: 0, nota: '' });
+    setStockFormError('');
+  };
+
+  const handleStockSubmit = async () => {
+    if (!selectedProducto) return;
+
+    setStockFormError('');
+
+    // Validar que la cantidad sea un número
+    if (typeof stockForm.cantidad !== 'number') {
+      setStockFormError('Cantidad debe ser un número');
+      return;
+    }
+
+    const nuevoStock = (selectedProducto?.stock_actual ?? 0) + stockForm.cantidad;
+
+    // Validar que no quede en negativo
+    if (nuevoStock < 0) {
+      setStockFormError(`No puedes retirar ${Math.abs(stockForm.cantidad)}. Stock disponible: ${selectedProducto.stock_actual}`);
+      return;
+    }
+
+    try {
+      await updateStockMutation.mutateAsync({
+        id: selectedProducto.id_producto,
+        cantidad: stockForm.cantidad,
+        nota: stockForm.nota
+      });
+    } catch (error: any) {
+      console.error('Error al actualizar stock:', error);
+    }
+  };
+
   const onSubmit = async (data: ProductoFormData) => {
     const payload = {
       sku: data.sku,
@@ -274,6 +339,7 @@ export function ProductosPage() {
       id_tipo_producto: data.id_tipo_producto || undefined,
       utilidad: data.utilidad,
       cantidad: data.cantidad,
+      costo_fijo: data.costo_fijo,
     };
 
     try {
@@ -352,7 +418,13 @@ export function ProductosPage() {
       label: 'Stock',
       sortable: true,
       render: (item: Producto) => (
-        <p className="font-medium text-white">{item.stock_actual || '—'}</p>
+
+        <button
+          onClick={() => handleOpenStockModal(item)}
+          className="font-medium text-amber-200 hover:text-amber-400 hover:underline transition-colors"
+        >
+          {item.stock_actual || '—'}
+        </button>
       ),
     },
     {
@@ -370,7 +442,7 @@ export function ProductosPage() {
       render: (item: Producto) => (
         <button
           onClick={() => handleOpenInsumosModal(item)}
-          className="font-medium text-slate-300 hover:text-amber-400 hover:underline transition-colors"
+          className="font-medium text-amber-200 hover:text-amber-400 hover:underline transition-colors"
         >
           {item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—'}
         </button>
@@ -383,7 +455,7 @@ export function ProductosPage() {
       render: (row: Producto) => (
         <button
           onClick={() => handleOpenEmbalajeModal(row)}
-          className=" font-medium text-slate-300 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
+          className=" font-medium text-amber-200 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
         >
           ${row.costo_embalaje ? Math.round(Number(row.costo_embalaje)).toLocaleString('es-CL') : '0'}
         </button>
@@ -438,7 +510,6 @@ export function ProductosPage() {
 
     </div>
   );
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -589,6 +660,12 @@ export function ProductosPage() {
               {...register('cantidad', { valueAsNumber: true })}
             />
           )}
+          <Input
+            label="Costo fijo (Productos de reventa)"
+            placeholder="Sólo para productos de reventa"
+            error={errors.costo_fijo?.message}
+            {...register('costo_fijo', { valueAsNumber: true })}
+          />
           <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-300">
               Nota
@@ -642,7 +719,8 @@ export function ProductosPage() {
           const totalInsumos = insumosTemporales.reduce((sum, item) => sum + (item.subtotal || 0), 0);
           const cadenaSeleccionada = cadenas.find((c) => c.id_cadena === selectedCadena);
           const precioCadena = parseFloat(cadenaSeleccionada?.precio?.toString() || '0');
-          const totalGeneral = totalInsumos + precioCadena;
+          const costoFijo = parseFloat(selectedProducto?.costo_fijo?.toString() || '0');
+          const totalGeneral = totalInsumos + precioCadena + costoFijo;
 
           return (
             <div className="space-y-6">
@@ -676,6 +754,10 @@ export function ProductosPage() {
               {/* Resumen de costos */}
               <div className="p-4 bg-zinc-800/30 rounded-lg border border-zinc-700">
                 <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Costo fijo:</span>
+                    <span>${costoFijo.toLocaleString('es-CL')}</span>
+                  </div>
                   <div className="flex justify-between text-zinc-400">
                     <span>Insumos:</span>
                     <span>${totalInsumos.toLocaleString('es-CL')}</span>
@@ -778,7 +860,88 @@ export function ProductosPage() {
           );
         })()}
       </Modal>
+      {/* Modal: Actualizar Stock */}
+      <Modal
+        isOpen={isStockModalOpen}
+        onClose={handleCloseStockModal}
+        title={`Actualizar Stock - ${selectedProducto?.sku}`}
+        size="sm"
+      >
+        <div className="space-y-4">
+          {/* Stock actual */}
+          <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+            <p className="text-sm text-zinc-400">Stock actual</p>
+            <p className="text-2xl font-semibold text-amber-400">
+              {selectedProducto?.stock_actual || 0}
+            </p>
+          </div>
 
+          {/* Input de cantidad */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
+              Cantidad a añadir/retirar
+            </label>
+            <input
+              type="number"
+              value={stockForm.cantidad}
+              onChange={(e) => {
+                setStockForm({ ...stockForm, cantidad: Number(e.target.value) });
+                setStockFormError('');
+              }}
+              placeholder="Positivo para añadir, negativo para retirar"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+            />
+          </div>
+
+          {/* Input de nota */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
+              Nota
+            </label>
+            <textarea
+              value={stockForm.nota}
+              onChange={(e) => setStockForm({ ...stockForm, nota: e.target.value })}
+              placeholder="Ej: Añadir o retirar stock, corrección, etc."
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 resize-none"
+              rows={3}
+            />
+          </div>
+
+          {/* Error message */}
+          {stockFormError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-400">{stockFormError}</p>
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-zinc-800">
+            <button
+              type="button"
+              onClick={handleCloseStockModal}
+              disabled={updateStockMutation.isPending}
+              className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white hover:bg-zinc-800 transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleStockSubmit}
+              disabled={updateStockMutation.isPending}
+              className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {updateStockMutation.isPending ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Guardando...
+                </>
+              ) : (
+                'Guardar'
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <ProductoCostoModal
         isOpen={isCostoModalOpen}
