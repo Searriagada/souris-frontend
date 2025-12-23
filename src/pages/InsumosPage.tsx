@@ -240,7 +240,6 @@ export function InsumosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif text-white">Insumos</h1>
-          <p className="text-zinc-500">Stock de insumos</p>
         </div>
         <Button onClick={handleOpenCreate} leftIcon={<Plus className="w-5 h-5" />}>
           Nuevo Insumo

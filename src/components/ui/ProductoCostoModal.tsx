@@ -45,12 +45,12 @@ export function ProductoCostoModal({
   const precioVenta = precioVentaActual || Number(producto.precio_venta) || 0;
 
   const precioEstimado = Number(producto.precio_venta_estimado) || precioVenta;
-  const neto = precioEstimado / 1.19;
-  const iva = precioEstimado - neto;
-  const montoComision = precioEstimado * comision;
+  const neto =  precioVenta / 1.19;
+  const iva = precioVenta - neto;
+  const montoComision = precioVenta * comision;
   const despachoFinal = precioVenta >= montoEnvioGratis ? costoDespacho : 0;
 
-
+console.log({ precioVenta, montoEnvioGratis, costoDespacho, despachoFinal });
 
   const onSubmit = async (data: PrecioVentaFormData) => {
     if (!producto) {
@@ -106,15 +106,19 @@ export function ProductoCostoModal({
           <Input label="" type="number" placeholder="0" step="1" error={errors.precio_venta?.message} {...register('precio_venta', { valueAsNumber: true })} />
         </div>
 
-        {precioVenta < precioEstimado && precioVenta > 0 && (
-          <div className="p-3 bg-amber-950/50 border border-amber-700 rounded-lg flex gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="text-amber-200 font-medium">Precio por debajo del sugerido</p>
-              <p className="text-amber-100/70 text-xs mt-1">Diferencia: {formatCLP(precioEstimado - precioVenta)}</p>
+        {(() => {
+          const diferencia = precioEstimado - precioVenta;
+          const umbralMinimo = 1; // umbral mínimo para diferencia decimal
+          return diferencia > umbralMinimo && precioVenta > 0 && (
+            <div className="p-3 bg-amber-950/50 border border-amber-700 rounded-lg flex gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="text-amber-200 font-medium">Precio por debajo del sugerido</p>
+                <p className="text-amber-100/70 text-xs mt-1">Diferencia: {formatCLP(diferencia)}</p>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
         <div className="flex gap-3 pt-4 border-t border-zinc-800">
           <Button type="button" variant="secondary" onClick={onClose} className="flex-1" disabled={isSubmitting || isLoading}>Cancelar</Button>
           <Button type="submit" isLoading={isSubmitting || isLoading} className="flex-1">Guardar Precio</Button>
