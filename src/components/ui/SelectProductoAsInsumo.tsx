@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Package, Search,Sticker } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Search } from 'lucide-react';
 import { Button } from './Button';
 import api from '../../services/api';
-import { Insumo } from '../../types/index';
 
 const formatCLP = (value?: number | string): string | null => {
   if (value === undefined || value === null) return null;
@@ -13,29 +12,36 @@ const formatCLP = (value?: number | string): string | null => {
 };
 
 // ==================== TYPES ====================
-export interface InsumoSeleccionado {
-  id_insumo: number;
-  nombre_insumo: string;
+interface ProductoAsInsumo {
+  id_producto: number;
+  sku: string;
+  nombre_producto: string;
+  costo_fijo: number;
+}
+
+export interface ProductoInsumoSeleccionado {
+  id_producto_as_insumo: number;
+  nombre_producto: string;
   cantidad: number;
-  precio_unitario?: number;
+  costo_fijo?: number;
   subtotal?: number;
 }
 
-interface InsumoSelectorProps {
-  items: InsumoSeleccionado[];
-  onChange: (items: InsumoSeleccionado[]) => void;
+interface ProductoInsumoSelectorProps {
+  items: ProductoInsumoSeleccionado[];
+  onChange: (items: ProductoInsumoSeleccionado[]) => void;
   isLoadingItems?: boolean;
   title?: string;
 }
 
 // ==================== COMPONENT ====================
-export function InsumoSelector({ 
+export function ProductoInsumoSelector({ 
   items, 
   onChange, 
   isLoadingItems = false,
-  title = 'Insumos'
-}: InsumoSelectorProps) {
-  const [selectedInsumoId, setSelectedInsumoId] = useState<number | ''>('');
+  title = 'Productos como Insumo'
+}: ProductoInsumoSelectorProps) {
+  const [selectedProductoId, setSelectedProductoId] = useState<number | ''>('');
   const [cantidad, setCantidad] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -58,25 +64,26 @@ export function InsumoSelector({
     };
   }, [isDropdownOpen]);
 
-  const { data: insumosDisponibles = [], isLoading } = useQuery({
-    queryKey: ['insumos-selector'],
+  const { data: productosDisponibles = [], isLoading } = useQuery({
+    queryKey: ['productos-as-insumo-selector'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append('page', '1');
-      params.append('limit', '500');
-      const response = await api.get(`/insumos/manufacturing?${params}`);
-      return response.data?.data?.items || [];
+      const response = await api.get('/productos/as-insumos/all');
+      return response.data?.data || [];
     },
   });
 
-  const insumosArray = Array.isArray(insumosDisponibles) ? insumosDisponibles : [];
+  const productosArray = Array.isArray(productosDisponibles) ? productosDisponibles : [];
 
-  const insumosFiltrados = insumosArray.filter((insumo: Insumo) =>
-    insumo.nombre_insumo.toLowerCase().includes(searchTerm.toLowerCase())
+  const productosFiltrados = productosArray.filter((producto: ProductoAsInsumo) =>
+    producto.nombre_producto.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  console.log('searchTerm:', searchTerm);
+console.log('productosArray:', productosArray);
+console.log('productosFiltrados:', productosFiltrados);
+
   const resetForm = () => {
-    setSelectedInsumoId('');
+    setSelectedProductoId('');
     setCantidad(1);
     setSearchTerm('');
     setEditingIndex(null);
@@ -84,37 +91,37 @@ export function InsumoSelector({
   };
 
   const handleAgregar = () => {
-    if (!selectedInsumoId || cantidad <= 0) return;
+    if (!selectedProductoId || cantidad <= 0) return;
 
-    const insumo = insumosArray.find((i: Insumo) => i.id_insumo === selectedInsumoId);
-    if (!insumo) return;
+    const producto = productosArray.find((p: ProductoAsInsumo) => p.id_producto === selectedProductoId);
+    if (!producto) return;
 
-    const existingIndex = items.findIndex((item) => item.id_insumo === selectedInsumoId);
+    const existingIndex = items.findIndex((item) => item.id_producto_as_insumo === selectedProductoId);
 
     if (existingIndex !== -1 && editingIndex === null) {
       const updated = [...items];
       updated[existingIndex].cantidad += cantidad;
-      if (insumo.precio_insumo) {
-        updated[existingIndex].subtotal = updated[existingIndex].cantidad * insumo.precio_insumo;
+      if (producto.costo_fijo) {
+        updated[existingIndex].subtotal = updated[existingIndex].cantidad * producto.costo_fijo;
       }
       onChange(updated);
     } else if (editingIndex !== null) {
       const updated = [...items];
       updated[editingIndex] = {
-        id_insumo: insumo.id_insumo,
-        nombre_insumo: insumo.nombre_insumo,
+        id_producto_as_insumo: producto.id_producto,
+        nombre_producto: producto.nombre_producto,
         cantidad,
-        precio_unitario: insumo.precio_insumo,
-        subtotal: insumo.precio_insumo ? cantidad * insumo.precio_insumo : undefined,
+        costo_fijo: producto.costo_fijo,
+        subtotal: producto.costo_fijo ? cantidad * producto.costo_fijo : undefined,
       };
       onChange(updated);
     } else {
-      const nuevoItem: InsumoSeleccionado = {
-        id_insumo: insumo.id_insumo,
-        nombre_insumo: insumo.nombre_insumo,
+      const nuevoItem: ProductoInsumoSeleccionado = {
+        id_producto_as_insumo: producto.id_producto,
+        nombre_producto: producto.nombre_producto,
         cantidad,
-        precio_unitario: insumo.precio_insumo,
-        subtotal: insumo.precio_insumo ? cantidad * insumo.precio_insumo : undefined,
+        costo_fijo: producto.costo_fijo,
+        subtotal: producto.costo_fijo ? cantidad * producto.costo_fijo : undefined,
       };
       onChange([...items, nuevoItem]);
     }
@@ -124,9 +131,9 @@ export function InsumoSelector({
 
   const handleEditar = (index: number) => {
     const item = items[index];
-    setSelectedInsumoId(item.id_insumo);
+    setSelectedProductoId(item.id_producto_as_insumo);
     setCantidad(item.cantidad);
-    setSearchTerm(item.nombre_insumo);
+    setSearchTerm(item.nombre_producto);
     setEditingIndex(index);
   };
 
@@ -137,9 +144,9 @@ export function InsumoSelector({
     }
   };
 
-  const handleSelectInsumo = (insumo: Insumo) => {
-    setSelectedInsumoId(insumo.id_insumo);
-    setSearchTerm(insumo.nombre_insumo);
+  const handleSelectProducto = (producto: ProductoAsInsumo) => {
+    setSelectedProductoId(producto.id_producto);
+    setSearchTerm(producto.nombre_producto);
     setIsDropdownOpen(false);
   };
 
@@ -147,13 +154,15 @@ export function InsumoSelector({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <h3 className="text-white font-medium">{title}</h3>
-      </div>
+      {title && (
+        <div className="flex items-center gap-2">
+          <h3 className="text-white font-medium">{title}</h3>
+        </div>
+      )}
 
       <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
         <p className="text-sm text-zinc-400 mb-4">
-          {editingIndex !== null ? 'Editando insumo' : 'Agregar insumo'}
+          {editingIndex !== null ? 'Editando producto' : 'Agregar producto'}
         </p>
 
         <div className="grid grid-cols-12 gap-3">
@@ -168,10 +177,10 @@ export function InsumoSelector({
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setIsDropdownOpen(true);
-                  if (!e.target.value) setSelectedInsumoId('');
+                  if (!e.target.value) setSelectedProductoId('');
                 }}
                 onFocus={() => setIsDropdownOpen(true)}
-                placeholder="Buscar insumo..."
+                placeholder="Buscar producto..."
                 className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
               />
 
@@ -181,28 +190,26 @@ export function InsumoSelector({
                     <div className="px-4 py-3 text-sm text-zinc-500">
                       Cargando...
                     </div>
-                  ) : insumosFiltrados.length > 0 ? (
-                    insumosFiltrados.map((insumo: Insumo) => (
+                  ) : productosFiltrados.length > 0 ? (
+                    productosFiltrados.map((producto: ProductoAsInsumo) => (
                       <button
-                        key={insumo.id_insumo}
+                        key={producto.id_producto}
                         type="button"
-                        onClick={() => handleSelectInsumo(insumo)}
+                        onClick={() => handleSelectProducto(producto)}
                         className={`w-full text-left px-4 py-2.5 hover:bg-zinc-800 transition-colors ${
-                          selectedInsumoId === insumo.id_insumo
+                          selectedProductoId === producto.id_producto
                             ? 'bg-amber-500/10 text-amber-400'
                             : 'text-zinc-300'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="block">{insumo.nombre_insumo}</span>
-                            {insumo.nombre_categoria && (
-                              <span className="text-xs text-zinc-500">{insumo.nombre_categoria}</span>
-                            )}
+                            <span className="block">{producto.nombre_producto}</span>
+                            <span className="text-xs text-zinc-500">{producto.sku}</span>
                           </div>
-                          {formatCLP(insumo.precio_insumo) && (
+                          {formatCLP(producto.costo_fijo) && (
                             <span className="text-xs text-zinc-500">
-                              ${formatCLP(insumo.precio_insumo)}
+                              ${formatCLP(producto.costo_fijo)}
                             </span>
                           )}
                         </div>
@@ -233,7 +240,7 @@ export function InsumoSelector({
             <Button
               type="button"
               onClick={handleAgregar}
-              disabled={!selectedInsumoId || cantidad <= 0}
+              disabled={!selectedProductoId || cantidad <= 0}
               className="w-full h-full"
             >
               {editingIndex !== null ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -256,21 +263,21 @@ export function InsumoSelector({
         {isLoadingItems ? (
           <div className="px-4 py-8 text-center">
             <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-2" />
-            <p className="text-zinc-500 text-sm">Cargando insumos...</p>
+            <p className="text-zinc-500 text-sm">Cargando productos...</p>
           </div>
         ) : items.length > 0 ? (
           <div className="divide-y divide-zinc-800">
             <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-zinc-800/20 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-              <div className="col-span-5">Insumo</div>
+              <div className="col-span-5">Producto</div>
               <div className="col-span-2 text-center">Cantidad</div>
-              <div className="col-span-2 text-right">P. Unit.</div>
+              <div className="col-span-2 text-right">Costo Fijo</div>
               <div className="col-span-2 text-right">Subtotal</div>
               <div className="col-span-1"></div>
             </div>
 
             {items.map((item, index) => (
               <div
-                key={`${item.id_insumo}-${index}`}
+                key={`${item.id_producto_as_insumo}-${index}`}
                 className={`grid grid-cols-12 gap-4 px-4 py-3 items-center transition-colors ${
                   editingIndex === index
                     ? 'bg-amber-500/5 border-l-2 border-amber-500'
@@ -278,13 +285,13 @@ export function InsumoSelector({
                 }`}
               >
                 <div className="col-span-5">
-                  <span className="text-white font-medium text-sm">{item.nombre_insumo}</span>
+                  <span className="text-white font-medium text-sm">{item.nombre_producto}</span>
                 </div>
                 <div className="col-span-2 text-center">
                   <span className="px-2 py-1 bg-zinc-800 rounded text-zinc-300 text-sm">{item.cantidad}</span>
                 </div>
                 <div className="col-span-2 text-right text-zinc-400 text-sm">
-                  {formatCLP(item.precio_unitario) ? `$${formatCLP(item.precio_unitario)}` : '-'}
+                  {formatCLP(item.costo_fijo) ? `$${formatCLP(item.costo_fijo)}` : '-'}
                 </div>
                 <div className="col-span-2 text-right text-amber-400 font-medium text-sm">
                   {formatCLP(item.subtotal) ? `$${formatCLP(item.subtotal)}` : '-'}
@@ -325,9 +332,9 @@ export function InsumoSelector({
         ) : (
           <div className="px-4 py-8 text-center">
             <Package className="w-10 h-10 text-zinc-700 mx-auto mb-2" />
-            <p className="text-zinc-500 text-sm">No hay insumos agregados</p>
+            <p className="text-zinc-500 text-sm">No hay productos agregados</p>
             <p className="text-zinc-600 text-xs mt-1">
-              Usa el buscador para agregar insumos
+              Usa el buscador para agregar productos como insumo
             </p>
           </div>
         )}
@@ -336,4 +343,4 @@ export function InsumoSelector({
   );
 }
 
-export default InsumoSelector;
+export default ProductoInsumoSelector;

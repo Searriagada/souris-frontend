@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Search, X, Power, Link } from 'lucide-react';
+import { Plus, Pencil, Search, X, Power, Link, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import { productoService, tipoProductoService } from '../services/entities.service';
@@ -12,6 +12,7 @@ import { DataTable, Modal, ConfirmDialog, StatusBadge, Button, Input, CustomSele
 import { InsumoSelector, InsumoSeleccionado } from '../components/ui/SelectInsumoManufactura';
 import { InsumoSelectorEmbalaje, InsumoEmbalajeSeleccionado } from '../components/ui/SelectInsumoEmbalaje';
 import { ProductoCostoModal } from '../components/ui/ProductoCostoModal';
+import { ProductoInsumoSelector, ProductoInsumoSeleccionado } from '../components/ui/Selectproductoasinsumo';
 
 export function ProductosPage() {
   const queryClient = useQueryClient();
@@ -30,6 +31,12 @@ export function ProductosPage() {
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [stockForm, setStockForm] = useState({ cantidad: 0, nota: '' });
   const [stockFormError, setStockFormError] = useState('');
+  const [productoInsumoTemporales, setProductoInsumoTemporales] = useState<ProductoInsumoSeleccionado[]>([]);
+  const [openProductoInsumo, setOpenProductoInsumo] = useState(false); // para el acordeón
+
+  // Accordion states for Insumos modal
+  const [openCadena, setOpenCadena] = useState(false);
+  const [openCosteo, setOpenCosteo] = useState(false);
 
 
 
@@ -98,8 +105,8 @@ export function ProductosPage() {
   });
 
   const updateInsumosMutation = useMutation({
-    mutationFn: ({ id, insumos, id_cadena }: { id: number; insumos: any[]; id_cadena: number | null }) =>
-      api.put(`/productos/${id}/insumos`, { insumos, id_cadena }),
+    mutationFn: ({ id, insumos, id_cadena, productos_insumo }: { id: number; insumos: any[]; id_cadena: number | null; productos_insumo: any[] }) =>
+      api.put(`/productos/${id}/insumos`, { insumos, id_cadena, productos_insumo }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos'] });
       toast.success('Insumos actualizados exitosamente');
@@ -183,15 +190,12 @@ export function ProductosPage() {
     setSelectedProducto(producto);
     setIsInsumosModalOpen(true);
     setIsLoadingInsumos(true);
-    console.log('producto.id_cadena:', producto.id_cadena);
-
-    // Cargar la cadena actual del producto
     setSelectedCadena(producto.id_cadena ?? null);
 
     try {
+      // Cargar insumos normales
       const response = await api.get(`/productos/${producto.id_producto}/insumos`);
       const productoData = response.data?.data || [];
-
       const insumosCargados: InsumoSeleccionado[] = productoData
         .filter((row: any) => row.id_insumo !== null)
         .map((row: any) => ({
@@ -201,12 +205,26 @@ export function ProductosPage() {
           precio_unitario: row.precio_insumo,
           subtotal: row.precio_insumo ? row.cantidad * row.precio_insumo : undefined,
         }));
-
       setInsumosTemporales(insumosCargados);
+
+      // Cargar productos como insumo
+      const responseProductoInsumo = await api.get(`/productos/as-insumos/${producto.id_producto}`);
+      const productoInsumoData = responseProductoInsumo.data?.data || [];
+      const productoInsumoCargados: ProductoInsumoSeleccionado[] = productoInsumoData.map((row: any) => ({
+        id_producto_as_insumo: row.id_producto_as_insumo,
+        nombre_producto: row.nombre_producto,
+        sku: row.nombre_producto,
+        cantidad: row.cantidad || 0,
+        costo_fijo: row.costo_fijo,
+        subtotal: row.costo_fijo ? row.cantidad * row.costo_fijo : undefined,
+      }));
+      setProductoInsumoTemporales(productoInsumoCargados);
+
     } catch (error) {
       console.error('Error al cargar insumos del producto:', error);
       toast.error('Error al cargar los insumos del producto');
       setInsumosTemporales([]);
+      setProductoInsumoTemporales([]);
     } finally {
       setIsLoadingInsumos(false);
     }
@@ -263,6 +281,7 @@ export function ProductosPage() {
     setIsInsumosModalOpen(false);
     setSelectedProducto(null);
     setInsumosTemporales([]);
+    setProductoInsumoTemporales([]);
     setSelectedCadena(null);
   };
 
@@ -331,6 +350,7 @@ export function ProductosPage() {
     }
   };
 
+
   const onSubmit = async (data: ProductoFormData) => {
     const payload = {
       sku: data.sku,
@@ -357,15 +377,21 @@ export function ProductosPage() {
   const onSubmitInsumos = async () => {
     if (!selectedProducto) return;
 
-    const payload = insumosTemporales.map((item) => ({
+    const insumosPayload = insumosTemporales.map((item) => ({
       id_insumo: item.id_insumo,
+      cantidad: item.cantidad,
+    }));
+
+    const productosInsumoPayload = productoInsumoTemporales.map((item) => ({
+      id_producto_as_insumo: item.id_producto_as_insumo,
       cantidad: item.cantidad,
     }));
 
     try {
       await updateInsumosMutation.mutateAsync({
         id: selectedProducto.id_producto,
-        insumos: payload,
+        insumos: insumosPayload,
+        productos_insumo: productosInsumoPayload, // agregar esto
         id_cadena: selectedCadena
       });
     } catch (error: any) {
@@ -719,40 +745,91 @@ export function ProductosPage() {
           const totalInsumos = insumosTemporales.reduce((sum, item) => sum + (item.subtotal || 0), 0);
           const cadenaSeleccionada = cadenas.find((c) => c.id_cadena === selectedCadena);
           const precioCadena = parseFloat(cadenaSeleccionada?.precio?.toString() || '0');
-          const costoFijo = parseFloat(selectedProducto?.costo_fijo?.toString() || '0');
+          const costoFijo = productoInsumoTemporales.reduce((sum, item) => sum + (item.subtotal || 0), 0);
           const totalGeneral = totalInsumos + precioCadena + costoFijo;
 
           return (
-            <div className="space-y-6">
-              {/* Selector de Cadena */}
-              <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                <div className="flex items-center gap-2 mb-3">
-                  <Link className="w-5 h-5 text-amber-500" />
-                  <h3 className="text-white font-medium">Cadena del producto</h3>
-                </div>
-                <CustomSelect
-                  placeholder="Selecciona una cadena (opcional)"
-                  options={[
-                    { value: 0, label: 'Sin cadena' },
-                    ...cadenas.map((cadena) => ({
-                      value: cadena.id_cadena,
-                      label: `${cadena.nombre_cadena}${cadena.precio ? ` - $${parseFloat(cadena.precio.toString()).toLocaleString('es-CL')}` : ''}`,
-                    })),
-                  ]}
-                  value={selectedCadena ?? 0}
-                  onChange={(value) => setSelectedCadena(value && value !== 0 ? Number(value) : null)}
-                />
+            <div className="space-y-4">
+              {/* Acordeón: Productos como Insumo */}
+              <div className="border border-zinc-700 rounded-lg overflow-visible">
+                <button
+                  type="button"
+                  onClick={() => setOpenProductoInsumo(!openProductoInsumo)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-amber-900 hover:bg-amber-800 transition-colors"
+                >
+                  <span className="text-white font-medium">Productos como Insumo</span>
+                  <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${openProductoInsumo ? 'rotate-180' : ''}`} />
+                </button>
+                {openProductoInsumo && (
+                  <div className="p-4 border-t border-zinc-800">
+                    <ProductoInsumoSelector
+                      items={productoInsumoTemporales}
+                      onChange={setProductoInsumoTemporales}
+                      isLoadingItems={isLoadingInsumos}
+                      title=""
+                    />
+                  </div>
+                )}
+              </div>
+              {/* Accordion: Cadena del producto */}
+              <div className="border border-zinc-700 rounded-lg overflow-visible">
+                <button
+                  type="button"
+                  onClick={() => setOpenCadena((s) => !s)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-amber-900 hover:bg-amber-800 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium">Cadena</span>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${openCadena ? 'rotate-180' : ''}`} />
+                </button>
+
+                {openCadena && (
+                  <div className="p-4 bg-zinc-800/50">
+                    <CustomSelect
+                      placeholder="Selecciona una cadena (opcional)"
+                      options={[
+                        { value: 0, label: 'Sin cadena' },
+                        ...cadenas.map((cadena) => ({
+                          value: cadena.id_cadena,
+                          label: `${cadena.nombre_cadena}${cadena.precio ? ` - $${parseFloat(cadena.precio.toString()).toLocaleString('es-CL')}` : ''}`,
+                        })),
+                      ]}
+                      value={selectedCadena ?? 0}
+                      onChange={(value) => setSelectedCadena(value && value !== 0 ? Number(value) : null)}
+                    />
+                  </div>
+                )}
               </div>
 
-              <InsumoSelector
-                items={insumosTemporales}
-                onChange={setInsumosTemporales}
-                isLoadingItems={isLoadingInsumos}
-                title="Costeo de insumos"
-              />
+              {/* Accordion: Costeo de insumos */}
+              <div className="border border-zinc-700 rounded-lg overflow-visible">
+                <button
+                  type="button"
+                  onClick={() => setOpenCosteo((s) => !s)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-amber-900 hover:bg-amber-800 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium">Costeo de insumos</span>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${openCosteo ? 'rotate-180' : ''}`} />
+                </button>
 
-              {/* Resumen de costos */}
-              <div className="p-4 bg-zinc-800/30 rounded-lg border border-zinc-700">
+                {openCosteo && (
+                  <div className="p-4 bg-zinc-800/30">
+                    <InsumoSelector
+                      items={insumosTemporales}
+                      onChange={setInsumosTemporales}
+                      isLoadingItems={isLoadingInsumos}
+                      title=""
+                    />
+
+
+                  </div>
+                )}
+              </div>
+              {/* Resumen de costos dentro del acordeón */}
+              <div className="mt-4 p-4 bg-zinc-800/30 rounded-lg border border-zinc-700">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
                     <span>Costo fijo:</span>
@@ -772,7 +849,6 @@ export function ProductosPage() {
                   </div>
                 </div>
               </div>
-
               <div className="flex gap-3 pt-4 border-t border-zinc-800">
                 <Button
                   type="button"
