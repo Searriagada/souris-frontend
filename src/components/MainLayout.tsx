@@ -64,7 +64,7 @@ export function MainLayout() {
           <div className="p-6 border-b border-zinc-800">
             <div className="flex items-center justify-between">
               <Link to="/dashboard" className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
                   <Package className="w-6 h-6 text-zinc-950" />
                 </div>
                 <div>
@@ -95,12 +95,12 @@ export function MainLayout() {
                     flex items-center gap-3 px-4 py-3 rounded-lg
                     transition-all duration-200 group
                     ${active
-                      ? 'bg-amber-500/10 text-amber-500'
+                      ? 'bg-pink-500/10 text-pink-500'
                       : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 ${active ? 'text-amber-500' : ''}`} />
+                  <Icon className={`w-5 h-5 ${active ? 'text-pink-500' : ''}`} />
                   <span className="font-medium">{item.name}</span>
                   {active && (
                     <ChevronRight className="w-4 h-4 ml-auto" />
@@ -114,7 +114,7 @@ export function MainLayout() {
           <div className="p-4 border-t border-zinc-800">
             <div className="flex items-center gap-3 px-4 py-3 mb-2">
               <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center">
-                <span className="text-amber-500 font-semibold text-sm">
+                <span className="text-pink-500 font-semibold text-sm">
                   {user?.nombre?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>

@@ -180,7 +180,7 @@ export function InsumosPage() {
       render: (item: Insumo) => (
         <button
           onClick={() => handleOpenStockModal(item)}
-          className="font-medium text-amber-500 hover:text-amber-400 hover:underline transition-colors"
+          className="font-medium text-pink-400 hover:text-pink-700 hover:underline transition-colors"
         >
           {item.cantidad || 0}
         </button>

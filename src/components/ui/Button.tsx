@@ -11,11 +11,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary: `
-    bg-gradient-to-r from-amber-600 to-amber-500
-    hover:from-amber-500 hover:to-amber-400
+    bg-gradient-to-r from-violet-500 to-violet-400
+    hover:from-violet-400 hover:to-violet-300
     text-zinc-950 font-semibold
-    shadow-lg shadow-amber-500/20
-    hover:shadow-amber-500/30
+    shadow-lg shadow-violet-500/20
+    hover:shadow-violet-500/30
   `,
   secondary: `
     bg-zinc-800 hover:bg-zinc-700
