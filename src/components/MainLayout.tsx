@@ -1,11 +1,8 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package,
-  LayoutDashboard,
   Box,
-  ShoppingCart,
   Users,
-  BarChart3,
   LogOut,
   Menu,
   X,
@@ -17,12 +14,9 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Productos', href: '/productos', icon: Box },
   { name: 'Insumos', href: '/insumos', icon: Package },
-  { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
   { name: 'Clientes', href: '/clientes', icon: Users },
-  { name: 'Reportes', href: '/reportes', icon: BarChart3 },
   { name: 'Configuración', href: '/configuracion', icon: Settings },
 ];
 

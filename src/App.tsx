@@ -6,13 +6,10 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './components/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { DashboardPage } from './pages/DashboardPage';
 import { ProductosPage } from './pages/ProductosPage';
 import { InsumosPage } from './pages/InsumosPage';
 import { ClientesPage } from './pages/ClientesPage';
-import { VentasPage } from './pages/VentasPage';
 import { ConfiguracionPage } from './pages/ConfiguracionPage';
-import { ReportesPage } from './pages/ReportesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,20 +38,17 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/productos" element={<ProductosPage />} />
               <Route path="/insumos" element={<InsumosPage />} />
               <Route path="/clientes" element={<ClientesPage />} />
-              <Route path="/ventas" element={<VentasPage />} />
               <Route path="/configuracion" element={<ConfiguracionPage />} />
-              <Route path="/reportes" element={<ReportesPage />} />
             </Route>
 
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect root to productos */}
+            <Route path="/" element={<Navigate to="/productos" replace />} />
             
             {/* 404 */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/productos" replace />} />
           </Routes>
         </BrowserRouter>
 

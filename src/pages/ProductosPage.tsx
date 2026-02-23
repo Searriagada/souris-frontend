@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Pencil, Search, X, Power, Link, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Search, X, Power, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import { productoService, tipoProductoService } from '../services/entities.service';
@@ -12,7 +12,7 @@ import { DataTable, Modal, ConfirmDialog, StatusBadge, Button, Input, CustomSele
 import { InsumoSelector, InsumoSeleccionado } from '../components/ui/SelectInsumoManufactura';
 import { InsumoSelectorEmbalaje, InsumoEmbalajeSeleccionado } from '../components/ui/SelectInsumoEmbalaje';
 import { ProductoCostoModal } from '../components/ui/ProductoCostoModal';
-import { ProductoInsumoSelector, ProductoInsumoSeleccionado } from '../components/ui/Selectproductoasinsumo';
+import { ProductoInsumoSelector, ProductoInsumoSeleccionado } from '../components/ui/SelectProductoAsInsumo';
 
 export function ProductosPage() {
   const queryClient = useQueryClient();
