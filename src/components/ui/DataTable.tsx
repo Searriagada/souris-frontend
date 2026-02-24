@@ -106,7 +106,7 @@ export function DataTable<T>({
                     className="px-6 py-12 text-center"
                   >
                     <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+                      <Loader2 className="w-8 h-8 text-pink-500 animate-spin" />
                       <span className="text-zinc-500">Cargando...</span>
                     </div>
                   </td>

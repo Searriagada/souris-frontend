@@ -148,7 +148,7 @@ export function InsumoSelectorEmbalaje({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Package className="w-5 h-5 text-amber-500" />
+        <Package className="w-5 h-5 text-pink-500" />
         <h3 className="text-white font-medium">{title}</h3>
       </div>
 
@@ -173,7 +173,7 @@ export function InsumoSelectorEmbalaje({
                 }}
                 onFocus={() => setIsDropdownOpen(true)}
                 placeholder="Buscar insumo..."
-                className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
               />
 
               {isDropdownOpen && (
@@ -190,7 +190,7 @@ export function InsumoSelectorEmbalaje({
                         onClick={() => handleSelectInsumo(insumo)}
                         className={`w-full text-left px-4 py-2.5 hover:bg-zinc-800 transition-colors ${
                           selectedInsumoId === insumo.id_insumo
-                            ? 'bg-amber-500/10 text-amber-400'
+                            ? 'bg-pink-500/10 text-pink-400'
                             : 'text-zinc-300'
                         }`}
                       >
@@ -226,7 +226,7 @@ export function InsumoSelectorEmbalaje({
               value={cantidad}
               onChange={(e) => setCantidad(Number(e.target.value))}
               placeholder="Cant."
-              className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+              className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
             />
           </div>
 
@@ -256,7 +256,7 @@ export function InsumoSelectorEmbalaje({
       <div className="border border-zinc-800 rounded-lg overflow-hidden">
         {isLoadingItems ? (
           <div className="px-4 py-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-2" />
+            <div className="animate-spin w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2" />
             <p className="text-zinc-500 text-sm">Cargando insumos...</p>
           </div>
         ) : items.length > 0 ? (
@@ -274,7 +274,7 @@ export function InsumoSelectorEmbalaje({
                 key={`${item.id_insumo}-${index}`}
                 className={`grid grid-cols-12 gap-4 px-4 py-3 items-center transition-colors ${
                   editingIndex === index
-                    ? 'bg-amber-500/5 border-l-2 border-amber-500'
+                    ? 'bg-pink-500/5 border-l-2 border-pink-500'
                     : 'hover:bg-zinc-800/30'
                 }`}
               >
@@ -287,14 +287,14 @@ export function InsumoSelectorEmbalaje({
                 <div className="col-span-2 text-right text-zinc-400 text-sm">
                   {formatCLP(item.precio_unitario) ? `$${formatCLP(item.precio_unitario)}` : '-'}
                 </div>
-                <div className="col-span-2 text-right text-amber-400 font-medium text-sm">
+                <div className="col-span-2 text-right text-pink-400 font-medium text-sm">
                   {formatCLP(item.subtotal) ? `$${formatCLP(item.subtotal)}` : '-'}
                 </div>
                 <div className="col-span-1 flex justify-end gap-1">
                   <button
                     type="button"
                     onClick={() => handleEditar(index)}
-                    className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-pink-400 hover:bg-zinc-800 rounded transition-colors"
                     title="Editar"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -316,7 +316,7 @@ export function InsumoSelectorEmbalaje({
                 <div className="col-span-9 text-right text-zinc-400 font-medium text-sm">
                   Total:
                 </div>
-                <div className="col-span-2 text-right text-amber-400 font-semibold">
+                <div className="col-span-2 text-right text-pink-400 font-semibold">
                   ${formatCLP(total)}
                 </div>
                 <div className="col-span-1"></div>

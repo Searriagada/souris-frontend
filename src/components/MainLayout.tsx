@@ -62,7 +62,7 @@ export function MainLayout() {
                   <Package className="w-6 h-6 text-zinc-950" />
                 </div>
                 <div>
-                  <h1 className="text-white font-semibold">Souris Store</h1>
+                  <h1 className="text-white font-semibold">Joyería Souris</h1>
                   <p className="text-zinc-500 text-xs">Control de Inventario</p>
                 </div>
               </Link>

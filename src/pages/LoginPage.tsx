@@ -66,29 +66,28 @@ export function LoginPage() {
         {/* Contenido */}
         <div className="relative z-10 flex flex-col justify-center px-16">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-3 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
-              <Package className="w-5 h-5 text-amber-500" />
-              <span className="text-amber-500 font-medium tracking-wide text-sm">
-                SOURIS STORE
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-pink-500/10 border border-pink-500/20 rounded-full">
+              <Package className="w-5 h-5 text-pink-500" />
+              <span className="text-pink-500 font-medium tracking-wide text-sm">
+                JOYERÍA SOURIS
               </span>
             </div>
           </div>
           
           <h1 className="font-serif text-5xl text-white mb-6 leading-tight">
-            Sistema de<br />
-            <span className="text-amber-500">Control de Inventario</span>
+            Plataforma de<br />
+            <span className="text-pink-500">Control de Inventario</span>
           </h1>
           
           <p className="text-zinc-400 text-lg max-w-md leading-relaxed">
-            Gestiona productos, insumos y ventas de manera eficiente. 
-            Todo el control de tu negocio en un solo lugar.
+            Una página hecha para mi Kaijucin
           </p>
           
           {/* Decoración */}
           <div className="mt-12 flex gap-4">
-            <div className="w-16 h-1 bg-amber-500 rounded-full" />
-            <div className="w-8 h-1 bg-amber-500/50 rounded-full" />
-            <div className="w-4 h-1 bg-amber-500/25 rounded-full" />
+            <div className="w-16 h-1 bg-pink-500 rounded-full" />
+            <div className="w-8 h-1 bg-pink-500/50 rounded-full" />
+            <div className="w-4 h-1 bg-pink-500/25 rounded-full" />
           </div>
         </div>
         
@@ -101,10 +100,10 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           {/* Logo móvil */}
           <div className="lg:hidden mb-10 text-center">
-            <div className="inline-flex items-center gap-3 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-4">
-              <Package className="w-5 h-5 text-amber-500" />
-              <span className="text-amber-500 font-medium tracking-wide text-sm">
-                SOURIS STORE
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-pink-500/10 border border-pink-500/20 rounded-full mb-4">
+              <Package className="w-5 h-5 text-pink-500" />
+              <span className="text-pink-500 font-medium tracking-wide text-sm">
+                JOYERÍA SOURIS
               </span>
             </div>
           </div>
@@ -137,7 +136,7 @@ export function LoginPage() {
                   w-full px-4 py-3.5 bg-zinc-900 border rounded-lg
                   text-white placeholder-zinc-600
                   transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500
+                  focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500
                   ${errors.username 
                     ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500' 
                     : 'border-zinc-800 hover:border-zinc-700'
@@ -171,7 +170,7 @@ export function LoginPage() {
                     w-full px-4 py-3.5 pr-12 bg-zinc-900 border rounded-lg
                     text-white placeholder-zinc-600
                     transition-all duration-200
-                    focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500
+                    focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500
                     ${errors.password 
                       ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500' 
                       : 'border-zinc-800 hover:border-zinc-700'
@@ -204,15 +203,15 @@ export function LoginPage() {
               disabled={isSubmitting}
               className="
                 w-full py-4 px-6 
-                bg-gradient-to-r from-amber-600 to-amber-500
-                hover:from-amber-500 hover:to-amber-400
+                bg-gradient-to-r from-pink-600 to-pink-500
+                hover:from-pink-500 hover:to-pink-400
                 disabled:from-zinc-700 disabled:to-zinc-600 disabled:cursor-not-allowed
                 text-zinc-950 font-semibold
                 rounded-lg
                 transition-all duration-200
                 flex items-center justify-center gap-2
-                shadow-lg shadow-amber-500/20
-                hover:shadow-amber-500/30
+                shadow-lg shadow-pink-500/20
+                hover:shadow-pink-500/30
                 disabled:shadow-none
               "
             >
@@ -236,7 +235,7 @@ export function LoginPage() {
               ¿No tienes una cuenta?{' '}
               <Link
                 to="/register"
-                className="text-amber-500 hover:text-amber-400 font-medium transition-colors"
+                className="text-pink-500 hover:text-pink-400 font-medium transition-colors"
               >
                 Regístrate aquí
               </Link>

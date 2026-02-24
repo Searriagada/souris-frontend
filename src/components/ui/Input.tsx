@@ -28,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             bg-zinc-900 border rounded-lg
             text-white placeholder-zinc-600
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500
+            focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500
             ${error
               ? 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500'
               : 'border-zinc-800 hover:border-zinc-700'

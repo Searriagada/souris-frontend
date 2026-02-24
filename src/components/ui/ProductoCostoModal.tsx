@@ -96,8 +96,8 @@ console.log({ precioVenta, montoEnvioGratis, costoDespacho, despachoFinal });
             <div className="flex justify-between"><span className="text-zinc-400">Comisión ({(comision * 100).toFixed(0)}%):</span><span className="text-white">{formatCLP(montoComision)}</span></div>
             <div className="flex justify-between"><span className="text-zinc-400">Neto:</span><span className="text-white">{formatCLP(neto)}</span></div>
             <div className="flex justify-between"><span className="text-zinc-400">IVA:</span><span className="text-white">{formatCLP(iva)}</span></div>
-            <div className="flex justify-between"><span className="text-white font-semibold">Precio final:</span><span className="text-amber-400 font-bold text-lg">{formatCLP(precioVenta)}</span></div>
-            <div className="flex justify-between py-2 px-2 bg-zinc-700/30 rounded"><span className="text-zinc-300 text-xs">Sugerido:</span><span className="text-amber-300">{formatCLP(precioEstimado)}</span></div>
+            <div className="flex justify-between"><span className="text-white font-semibold">Precio final:</span><span className="text-pink-400 font-bold text-lg">{formatCLP(precioVenta)}</span></div>
+            <div className="flex justify-between py-2 px-2 bg-zinc-700/30 rounded"><span className="text-zinc-300 text-xs">Sugerido:</span><span className="text-pink-300">{formatCLP(precioEstimado)}</span></div>
           </div>
         </div>
 
@@ -110,11 +110,11 @@ console.log({ precioVenta, montoEnvioGratis, costoDespacho, despachoFinal });
           const diferencia = precioEstimado - precioVenta;
           const umbralMinimo = 1; // umbral mínimo para diferencia decimal
           return diferencia > umbralMinimo && precioVenta > 0 && (
-            <div className="p-3 bg-amber-950/50 border border-amber-700 rounded-lg flex gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="p-3 bg-pink-950/50 border border-pink-700 rounded-lg flex gap-3">
+              <AlertCircle className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
-                <p className="text-amber-200 font-medium">Precio por debajo del sugerido</p>
-                <p className="text-amber-100/70 text-xs mt-1">Diferencia: {formatCLP(diferencia)}</p>
+                <p className="text-pink-200 font-medium">Precio por debajo del sugerido</p>
+                <p className="text-pink-100/70 text-xs mt-1">Diferencia: {formatCLP(diferencia)}</p>
               </div>
             </div>
           );

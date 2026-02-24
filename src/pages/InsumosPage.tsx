@@ -213,7 +213,7 @@ export function InsumosPage() {
             href={item.link_insumo}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-amber-500 hover:text-amber-400"
+            className="inline-flex items-center gap-1 text-pink-500 hover:text-pink-400"
           >
             Ver <ExternalLink className="w-3 h-3" />
           </a>
@@ -258,7 +258,7 @@ export function InsumosPage() {
               setPage(1);
             }}
             placeholder="Buscar insumos..."
-            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
           />
           {search && (
             <button

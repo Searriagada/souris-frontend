@@ -125,8 +125,8 @@ export function ClientesPage() {
       sortable: true,
       render: (item: Cliente) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-amber-500" />
+          <div className="w-10 h-10 bg-pink-500/10 rounded-full flex items-center justify-center">
+            <User className="w-5 h-5 text-pink-500" />
           </div>
           <span className="font-medium text-white">{item.nombre_cliente}</span>
         </div>

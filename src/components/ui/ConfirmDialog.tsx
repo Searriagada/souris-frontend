@@ -19,8 +19,8 @@ const variantStyles = {
     button: 'bg-red-600 hover:bg-red-500',
   },
   warning: {
-    icon: 'bg-amber-500/10 text-amber-500',
-    button: 'bg-amber-600 hover:bg-amber-500',
+    icon: 'bg-pink-500/10 text-pink-500',
+    button: 'bg-pink-600 hover:bg-pink-500',
   },
   info: {
     icon: 'bg-blue-500/10 text-blue-500',

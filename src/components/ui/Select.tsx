@@ -39,7 +39,8 @@ export const CustomSelect = ({
       borderColor: state.isFocused ? '#b45309' : '#27272a',
       borderWidth: '1px',
       borderRadius: '0.5rem',
-      padding: '0.375rem 0',
+      //padding: '0.375rem 0', //Daba error de altura
+      minHeight: 'unset',
       cursor: 'pointer',
       transition: 'all 0.2s',
       '&:hover': {

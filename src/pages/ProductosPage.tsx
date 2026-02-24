@@ -447,7 +447,7 @@ export function ProductosPage() {
 
         <button
           onClick={() => handleOpenStockModal(item)}
-          className="font-medium text-amber-200 hover:text-amber-400 hover:underline transition-colors"
+          className="font-medium text-pink-200 hover:text-pink-400 hover:underline transition-colors"
         >
           {item.stock_actual || '—'}
         </button>
@@ -468,7 +468,7 @@ export function ProductosPage() {
       render: (item: Producto) => (
         <button
           onClick={() => handleOpenInsumosModal(item)}
-          className="font-medium text-amber-200 hover:text-amber-400 hover:underline transition-colors"
+          className="font-medium text-pink-200 hover:text-pink-400 hover:underline transition-colors"
         >
           {item.joya ? `$${Math.round(Number(item.joya)).toLocaleString('es-CL')}` : '—'}
         </button>
@@ -481,7 +481,7 @@ export function ProductosPage() {
       render: (row: Producto) => (
         <button
           onClick={() => handleOpenEmbalajeModal(row)}
-          className=" font-medium text-amber-200 hover:text-amber-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
+          className=" font-medium text-pink-200 hover:text-pink-400 hover:underline transition-colors" // px-3 py-1 rounded-lg bg-pink-500/10 text-pink-400 hover:bg-pink-500/20 border border-pink-500/30 hover:border-pink-500/50 transition-colors duration-200 text-sm font-medium cursor-pointer
         >
           ${row.costo_embalaje ? Math.round(Number(row.costo_embalaje)).toLocaleString('es-CL') : '0'}
         </button>
@@ -502,7 +502,7 @@ export function ProductosPage() {
       render: (row: Producto) => (
         <button
           onClick={() => handleOpenCostoModal(row)}
-          className="font-medium text-green-500 hover:text-amber-500 hover:underline transition-colors"
+          className="font-medium text-green-500 hover:text-pink-500 hover:underline transition-colors"
         >
           ${row.precio_venta ? Math.round(Number(row.precio_venta)).toLocaleString('es-CL') : '0'}
         </button>
@@ -521,7 +521,7 @@ export function ProductosPage() {
     <div className="flex items-center justify-end gap-2">
       <button
         onClick={() => handleOpenPublicadoConfirm(item)}
-        className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg transition-colors"
+        className="p-2 text-zinc-400 hover:text-pink-500 hover:bg-zinc-800 rounded-lg transition-colors"
         title={item.publicado_ml && item.publicado_ml !== '' && item.publicado_ml === 'si' ? 'Pausar publicación' : 'Publicar'}
       >
         <Power className="w-4 h-4" />
@@ -561,7 +561,7 @@ export function ProductosPage() {
               setPage(1);
             }}
             placeholder="Buscar productos..."
-            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+            className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
           />
           {search && (
             <button
@@ -642,56 +642,67 @@ export function ProductosPage() {
         size="md"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="SKU"
-            placeholder="Ej: CN001"
-            error={errors.sku?.message}
-            {...register('sku')}
-          />
-          <Controller
-            name="id_tipo_producto"
-            control={control}
-            render={({ field }) => (
-              <CustomSelect
-                label="Tipo de producto"
-                placeholder="Selecciona un tipo"
-                options={tiposProducto.map((tipo) => ({
-                  value: tipo.id_tipo,
-                  label: tipo.nombre_tipo_producto,
-                }))}
-                value={field.value}
-                onChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                error={errors.id_tipo_producto?.message}
-              />
-            )}
-          />
 
+          {/* Fila 1: SKU - Tipo */}
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="SKU"
+              placeholder="Ej: CN001"
+              error={errors.sku?.message}
+              {...register('sku')}
+            />
+            <Controller
+              name="id_tipo_producto"
+              control={control}
+              render={({ field }) => (
+                <CustomSelect
+                  label="Tipo de producto"
+                  placeholder="Selecciona un tipo"
+                  options={tiposProducto.map((tipo) => ({
+                    value: tipo.id_tipo,
+                    label: tipo.nombre_tipo_producto,
+                  }))}
+                  value={field.value}
+                  onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                  error={errors.id_tipo_producto?.message}
+                />
+              )}
+            />
+          </div>
+
+          {/* Fila 2: Nombre */}
           <Input
             label="Nombre del producto"
             placeholder="Ej: Collar de plata"
             error={errors.nombre_producto?.message}
             {...register('nombre_producto')}
           />
-          <Input
-            label="Porcentaje de utilidad"
-            placeholder="1 = 100%"
-            error={errors.utilidad?.message}
-            {...register('utilidad', { valueAsNumber: true })}
-          />
-          {!selectedProducto && (
+
+          {/* Fila 3: Utilidad - Stock inicial - Costo fijo */}
+          <div className={`grid gap-3 ${selectedProducto ? 'grid-cols-2' : 'grid-cols-3'}`}>
             <Input
-              label="Stock inicial"
-              placeholder="Ej: 10"
-              error={errors.cantidad?.message}
-              {...register('cantidad', { valueAsNumber: true })}
+              label="Utilidad"
+              placeholder="1 = 100%"
+              error={errors.utilidad?.message}
+              {...register('utilidad', { valueAsNumber: true })}
             />
-          )}
-          <Input
-            label="Costo fijo (Productos de reventa)"
-            placeholder="Sólo para productos de reventa"
-            error={errors.costo_fijo?.message}
-            {...register('costo_fijo', { valueAsNumber: true })}
-          />
+            {!selectedProducto && (
+              <Input
+                label="Stock inicial"
+                placeholder="Ej: 10"
+                error={errors.cantidad?.message}
+                {...register('cantidad', { valueAsNumber: true })}
+              />
+            )}
+            <Input
+              label="Costo fijo"
+              placeholder="Solo reventa"
+              error={errors.costo_fijo?.message}
+              {...register('costo_fijo', { valueAsNumber: true })}
+            />
+          </div>
+
+          {/* Fila 4: Nota */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-300">
               Nota
@@ -699,13 +710,13 @@ export function ProductosPage() {
             <textarea
               placeholder="Añadir información adicional"
               className="
-                w-full px-4 py-3 
-                bg-zinc-900 border border-zinc-800 rounded-lg
-                text-white placeholder-zinc-600
-                transition-all duration-200 resize-none
-                focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500
-                hover:border-zinc-700
-              "
+        w-full px-4 py-3 
+        bg-zinc-900 border border-zinc-800 rounded-lg
+        text-white placeholder-zinc-600
+        transition-all duration-200 resize-none
+        focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500
+        hover:border-zinc-700
+      "
               rows={3}
               {...register('descripcion')}
             />
@@ -713,6 +724,7 @@ export function ProductosPage() {
               <p className="text-sm text-red-400">{errors.descripcion.message}</p>
             )}
           </div>
+
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
@@ -755,7 +767,7 @@ export function ProductosPage() {
                 <button
                   type="button"
                   onClick={() => setOpenProductoInsumo(!openProductoInsumo)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-amber-900 hover:bg-amber-800 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-pink-900 hover:bg-pink-800 transition-colors"
                 >
                   <span className="text-white font-medium">Productos como Insumo</span>
                   <ChevronDown className={`w-5 h-5 text-zinc-400 transition-transform ${openProductoInsumo ? 'rotate-180' : ''}`} />
@@ -776,7 +788,7 @@ export function ProductosPage() {
                 <button
                   type="button"
                   onClick={() => setOpenCadena((s) => !s)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-amber-900 hover:bg-amber-800 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-pink-900 hover:bg-pink-800 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium">Cadena</span>
@@ -807,7 +819,7 @@ export function ProductosPage() {
                 <button
                   type="button"
                   onClick={() => setOpenCosteo((s) => !s)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-amber-900 hover:bg-amber-800 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-pink-900 hover:bg-pink-800 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium">Costeo de insumos</span>
@@ -845,7 +857,7 @@ export function ProductosPage() {
                   </div>
                   <div className="flex justify-between text-white font-semibold pt-2 border-t border-zinc-700">
                     <span>Costo total:</span>
-                    <span className="text-amber-400">${totalGeneral.toLocaleString('es-CL')}</span>
+                    <span className="text-pink-400">${totalGeneral.toLocaleString('es-CL')}</span>
                   </div>
                 </div>
               </div>
@@ -908,7 +920,7 @@ export function ProductosPage() {
 
                   <div className="flex justify-between text-white font-semibold pt-2 border-t border-zinc-700">
                     <span>Costo total:</span>
-                    <span className="text-amber-400">${totalGeneral.toLocaleString('es-CL')}</span>
+                    <span className="text-pink-400">${totalGeneral.toLocaleString('es-CL')}</span>
                   </div>
                 </div>
               </div>
@@ -947,7 +959,7 @@ export function ProductosPage() {
           {/* Stock actual */}
           <div className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
             <p className="text-sm text-zinc-400">Stock actual</p>
-            <p className="text-2xl font-semibold text-amber-400">
+            <p className="text-2xl font-semibold text-pink-400">
               {selectedProducto?.stock_actual || 0}
             </p>
           </div>
@@ -965,7 +977,7 @@ export function ProductosPage() {
                 setStockFormError('');
               }}
               placeholder="Positivo para añadir, negativo para retirar"
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
             />
           </div>
 
@@ -978,7 +990,7 @@ export function ProductosPage() {
               value={stockForm.nota}
               onChange={(e) => setStockForm({ ...stockForm, nota: e.target.value })}
               placeholder="Ej: Añadir o retirar stock, corrección, etc."
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 resize-none"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 resize-none"
               rows={3}
             />
           </div>
@@ -1004,7 +1016,7 @@ export function ProductosPage() {
               type="button"
               onClick={handleStockSubmit}
               disabled={updateStockMutation.isPending}
-              className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {updateStockMutation.isPending ? (
                 <>
@@ -1040,7 +1052,7 @@ export function ProductosPage() {
         onConfirm={() => selectedProducto && togglePublicadoMLMutation.mutate(selectedProducto.id_producto)}
         title="Cambiar estado de publicación"
         message={`¿${selectedProducto?.publicado_ml && selectedProducto?.publicado_ml !== '' && selectedProducto?.publicado_ml === 'si' ? 'Pausar' : 'Publicar'} "${selectedProducto?.nombre_producto}" en MercadoLibre?`}
-        confirmText={selectedProducto?.publicado_ml && selectedProducto?.publicado_ml !== '' && selectedProducto?.publicado_ml === 'si' ? 'Pausar' : 'Publicar'}
+        confirmText={selectedProducto?.publicado_ml && selectedProducto?.publicado_ml !== '' && selectedProducto?.publicado_ml === 'si' ? 'Pausar publicación' : 'Publicar'}
         isLoading={togglePublicadoMLMutation.isPending}
       />
     </div>

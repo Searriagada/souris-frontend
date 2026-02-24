@@ -27,7 +27,7 @@ export function ConfiguracionPage() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <Settings className="w-6 h-6 text-amber-500" />
+          <Settings className="w-6 h-6 text-pink-500" />
           <h1 className="text-2xl font-serif text-white">Configuración</h1>
         </div>
         <p className="text-zinc-500">
@@ -47,7 +47,7 @@ export function ConfiguracionPage() {
                 flex items-center gap-2 px-4 py-3 font-medium text-sm
                 border-b-2 transition-all
                 ${activeTab === tab.id
-                  ? 'border-amber-500 text-amber-500'
+                  ? 'border-pink-500 text-pink-500'
                   : 'border-transparent text-zinc-400 hover:text-white'
                 }
               `}
@@ -184,7 +184,7 @@ function CajasTab() {
     <div className="flex items-center justify-end gap-2">
       <button
         onClick={() => toggleStatusMutation.mutate(item)}
-        className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg transition-colors"
+        className="p-2 text-zinc-400 hover:text-pink-500 hover:bg-zinc-800 rounded-lg transition-colors"
       >
         <Power className="w-4 h-4" />
       </button>
@@ -380,7 +380,7 @@ function CadenasTab() {
       label: 'Costo Total',
       sortable: true,
       render: (item: Cadena) => (
-        <span className="text-amber-400 font-medium">
+        <span className="text-pink-400 font-medium">
           ${(item.precio || 0).toLocaleString('es-CL')}
         </span>
       ),
@@ -573,7 +573,7 @@ function PlataformasTab() {
       label: 'Comisión',
       sortable: true,
       render: (item: PlataformaVenta) => (
-        <span className="px-2 py-1 bg-amber-500/10 text-amber-500 rounded text-sm font-medium">
+        <span className="px-2 py-1 bg-pink-500/10 text-pink-500 rounded text-sm font-medium">
           {item.comision}%
         </span>
       ),
@@ -589,7 +589,7 @@ function PlataformasTab() {
     <div className="flex items-center justify-end gap-2">
       <button
         onClick={() => toggleStatusMutation.mutate(item)}
-        className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 rounded-lg transition-colors"
+        className="p-2 text-zinc-400 hover:text-pink-500 hover:bg-zinc-800 rounded-lg transition-colors"
       >
         <Power className="w-4 h-4" />
       </button>

@@ -181,7 +181,7 @@ console.log('productosFiltrados:', productosFiltrados);
                 }}
                 onFocus={() => setIsDropdownOpen(true)}
                 placeholder="Buscar producto..."
-                className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
               />
 
               {isDropdownOpen && (
@@ -198,7 +198,7 @@ console.log('productosFiltrados:', productosFiltrados);
                         onClick={() => handleSelectProducto(producto)}
                         className={`w-full text-left px-4 py-2.5 hover:bg-zinc-800 transition-colors ${
                           selectedProductoId === producto.id_producto
-                            ? 'bg-amber-500/10 text-amber-400'
+                            ? 'bg-pink-500/10 text-pink-400'
                             : 'text-zinc-300'
                         }`}
                       >
@@ -232,7 +232,7 @@ console.log('productosFiltrados:', productosFiltrados);
               value={cantidad}
               onChange={(e) => setCantidad(Number(e.target.value))}
               placeholder="Cant."
-              className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+              className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
             />
           </div>
 
@@ -262,7 +262,7 @@ console.log('productosFiltrados:', productosFiltrados);
       <div className="border border-zinc-800 rounded-lg overflow-hidden">
         {isLoadingItems ? (
           <div className="px-4 py-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-2" />
+            <div className="animate-spin w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2" />
             <p className="text-zinc-500 text-sm">Cargando productos...</p>
           </div>
         ) : items.length > 0 ? (
@@ -280,7 +280,7 @@ console.log('productosFiltrados:', productosFiltrados);
                 key={`${item.id_producto_as_insumo}-${index}`}
                 className={`grid grid-cols-12 gap-4 px-4 py-3 items-center transition-colors ${
                   editingIndex === index
-                    ? 'bg-amber-500/5 border-l-2 border-amber-500'
+                    ? 'bg-pink-500/5 border-l-2 border-pink-500'
                     : 'hover:bg-zinc-800/30'
                 }`}
               >
@@ -293,14 +293,14 @@ console.log('productosFiltrados:', productosFiltrados);
                 <div className="col-span-2 text-right text-zinc-400 text-sm">
                   {formatCLP(item.costo_fijo) ? `$${formatCLP(item.costo_fijo)}` : '-'}
                 </div>
-                <div className="col-span-2 text-right text-amber-400 font-medium text-sm">
+                <div className="col-span-2 text-right text-pink-400 font-medium text-sm">
                   {formatCLP(item.subtotal) ? `$${formatCLP(item.subtotal)}` : '-'}
                 </div>
                 <div className="col-span-1 flex justify-end gap-1">
                   <button
                     type="button"
                     onClick={() => handleEditar(index)}
-                    className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-pink-400 hover:bg-zinc-800 rounded transition-colors"
                     title="Editar"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -322,7 +322,7 @@ console.log('productosFiltrados:', productosFiltrados);
                 <div className="col-span-9 text-right text-zinc-400 font-medium text-sm">
                   Total:
                 </div>
-                <div className="col-span-2 text-right text-amber-400 font-semibold">
+                <div className="col-span-2 text-right text-pink-400 font-semibold">
                   ${formatCLP(total)}
                 </div>
                 <div className="col-span-1"></div>
